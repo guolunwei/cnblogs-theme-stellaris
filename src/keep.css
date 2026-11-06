@@ -1,0 +1,13 @@
+/* ==========================================================================
+   星轨 Stellaris · 保留块（用户要求原样保留，不得修改）
+   1) 广告位隐藏
+   2) 自定义光标 mouse.ico
+   3) 3D 旋转 loading 动画（与页首 spinner-box 配套）
+   ========================================================================== */
+#ad_t2, #ad_c1, #under_post_news, #ad_c2, #under_post_kb, #cnblogs_c1, #cnblogs_c2, #cnblogs_ch {
+  display: none;
+}
+
+*{ cursor:var(--xm-cursor, auto);}
+
+@keyframes spin3D{from{transform:rotate3d(0.5,0.5,0.5,360deg)}to{transform:rotate3d(0deg)}}#loading{height:100%;background-color:#1d2630;display:flex;justify-content:center;align-items:center;position:fixed;top:0;left:0;right:0;overflow:hidden;z-index:99999999}.spinner-box{width:300px;height:300px;display:flex;justify-content:center;align-items:center;background-color:transparent}.leo{position:absolute;display:flex;justify-content:center;align-items:center;border-radius:50%}.blue-orbit{width:165px;height:165px;border:1px solid #91daffa5;animation:spin3D 3s linear .2s infinite}.green-orbit{width:120px;height:120px;border:1px solid #91ffbfa5;animation:spin3D 2s linear 0s infinite}.red-orbit{width:90px;height:90px;border:1px solid #ffca91a5;animation:spin3D 1s linear 0s infinite}.white-orbit{width:60px;height:60px;border:2px solid #fff;animation:spin3D 10s linear 0s infinite}.w1{transform:rotate3D(1,1,1,90deg)}.w2{transform:rotate3D(1,2,0.5,90deg)}.w3{transform:rotate3D(0.5,1,2,90deg)}

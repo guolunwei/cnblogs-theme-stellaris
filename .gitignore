@@ -1,0 +1,21 @@
+# dist/ is a shipped artifact (users paste these files directly); do NOT ignore it.
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# CDP regression scripts write their results next to themselves.
+tests/*-result.json
+
+# Local scratch, editor backups and dry-run output.
+dist/.preview/
+*.tmp
+*~
+.vscode/
+.idea/
+
+# examples/ previews are captured live-blog snapshots with personal data; never commit.
+# examples/mkpreview.js is the clean, reproducible generator and stays tracked.
+examples/*.html
+examples/*.png
+examples/.chunks.json

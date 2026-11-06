@@ -1,0 +1,213 @@
+/* ==========================================================================
+   星轨 Stellaris · 设计令牌
+   概念：深夜为底，轨道为线，光有温度，等宽为骨。
+   dark-first：:root 直接写深色；浅色由 prefers-color-scheme 覆写；
+   手动切换由 JS 写 html[data-theme] 覆盖（优先级最高）。
+   自定义入口：改这一份文件即可整体换肤，不需要碰其它 CSS。
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* keep.css reads this through var() despite loading first; the fallback keeps
+     the author's cursor asset working until a user overrides XM.cursorUrl. */
+  --xm-cursor: url("https://blog-static.cnblogs.com/files/home/mouse.ico"), auto;
+
+  /* ---------- 画布 ---------- */
+  --xm-bg: #0f151d;
+  --xm-bg-elevated: #141c25;
+
+  /* ---------- 表面 ---------- */
+  --xm-surface: #18212c;
+  --xm-surface-hover: #1f2a36;
+  --xm-border: #26313e;          /* 1px 发丝线，仅装饰 */
+  --xm-border-strong: #74869f;   /* 强调分隔 / 输入框边，≥3:1 */
+
+  /* ---------- 文字 ---------- */
+  --xm-text: #e7eef7;
+  --xm-text-secondary: #a9b8ca;
+  --xm-text-muted: #8b9bb0;
+
+  /* ---------- 强调：冷蓝管技术，暖金管人 ---------- */
+  --xm-accent: #5fb2ff;
+  --xm-accent-2: #f0c987;
+  --xm-accent-deep: #1f6fd0;        /* 必须放白字时的底色 */
+  --xm-accent-contrast: #08131f;    /* 压在主按钮上的文字（深墨，不是白） */
+  --xm-accent-soft: rgba(95, 178, 255, 0.14);
+  --xm-accent-text: #5fb2ff;        /* 作为文字/链接出现 */
+  --xm-grad-end: #f0c987;           /* 标题渐变终点：暖金 */
+
+  /* ---------- 代码 ---------- */
+  --xm-code-bg: #0b1118;
+  --xm-code-border: #222d3a;
+
+  /* ---------- 效果 ---------- */
+  --xm-selection: rgba(95, 178, 255, 0.26);
+  --xm-shadow-color: rgba(0, 0, 0, 0.55);
+  --xm-glow-color: rgba(95, 178, 255, 0.22);
+  --xm-shadow-card: 0 1px 2px var(--xm-shadow-color), 0 8px 24px -12px var(--xm-shadow-color);
+  --xm-shadow-card-hover: 0 2px 4px var(--xm-shadow-color), 0 16px 40px -16px var(--xm-shadow-color);
+  --xm-shadow-popover: 0 12px 32px -8px var(--xm-shadow-color);
+  --xm-glow-accent: 0 0 0 1px rgba(95, 178, 255, 0.35), 0 0 24px -4px var(--xm-glow-color);
+
+  /* ---------- 氛围 / 星点 / 代码块常量 ----------
+     Cross-mode constants: the two light overrides below must NOT redefine the
+     code-block / code-copy / code-ln-fg / lightbox-scrim tokens (code blocks
+     stay dark on light backgrounds, see visual-spec §3.4). Only
+     --xm-ambient-warm is allowed a light-mode override; --xm-star-dot* are
+     referenced by base.css dark/light rules instead of being overridden. */
+  --xm-ambient-warm:   rgba(240, 201, 135, 0.13);
+  --xm-star-dot:       rgba(255, 255, 255, 0.07);
+  --xm-star-dot-light: rgba(22, 32, 43, 0.075);
+  --xm-code-block-bg:  #0b1118;
+  --xm-code-block-fg:  #dce6f2;
+  --xm-code-ln-fg:     rgba(139, 155, 176, 0.72);
+  --xm-code-copy-bg:           rgba(11, 17, 24, 0.72);
+  --xm-code-copy-border:       rgba(116, 134, 159, 0.45);
+  --xm-code-copy-fg:           #cdd9e8;
+  --xm-code-copy-done:         #7ee0a6;
+  --xm-code-copy-done-border:  rgba(126, 224, 166, 0.6);
+  --xm-lightbox-scrim: rgba(6, 10, 15, 0.86);
+
+  /* ---------- 字体 ---------- */
+  --xm-font-sans: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+    "Noto Sans CJK SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --xm-font-mono: "Dank Mono", "JetBrains Mono", "FiraCode", "Cascadia Code",
+    Consolas, "Courier New", "Sarasa Mono SC", "Noto Sans Mono CJK SC",
+    "Source Han Mono SC", "PingFang SC", "Microsoft YaHei", monospace;
+
+  --xm-fs-display: 34px;
+  --xm-fs-h1: 28px;
+  --xm-fs-h2: 22px;
+  --xm-fs-h3: 17px;
+  --xm-fs-body: 15.5px;
+  --xm-fs-small: 13.5px;
+  --xm-fs-caption: 12px;
+
+  --xm-lh-display: 1.15;
+  --xm-lh-h1: 1.25;
+  --xm-lh-h2: 1.35;
+  --xm-lh-h3: 1.45;
+  --xm-lh-body: 1.75;
+  --xm-lh-small: 1.6;
+  --xm-lh-caption: 1.5;
+
+  /* ---------- 间距 ---------- */
+  --xm-s1: 4px;
+  --xm-s2: 8px;
+  --xm-s3: 12px;
+  --xm-s4: 16px;
+  --xm-s5: 20px;
+  --xm-s6: 24px;
+  --xm-s8: 32px;
+  --xm-s10: 40px;
+  --xm-s14: 56px;
+  --xm-s18: 72px;
+
+  /* ---------- 圆角 ---------- */
+  --xm-r-card: 12px;
+  --xm-r-button: 8px;
+  --xm-r-input: 8px;
+  --xm-r-chip: 999px;
+  --xm-r-code: 8px;
+
+  /* ---------- 描边 ---------- */
+  --xm-bw: 1px;
+  --xm-bw-focus: 2px;
+
+  /* ---------- 动效 ---------- */
+  --xm-dur-fast: 160ms;
+  --xm-dur: 220ms;
+  --xm-dur-slow: 380ms;
+  --xm-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --xm-ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+
+  /* ---------- 层级（#loading 的 99999999 不动） ---------- */
+  --xm-z-base: 0;
+  --xm-z-sticky: 20;
+  --xm-z-nav: 50;
+  --xm-z-overlay: 100;
+  --xm-z-toast: 1000;
+  --xm-z-fab: 1100;
+
+  /* ---------- 断点 ---------- */
+  --xm-bp-sm: 640px;
+  --xm-bp-md: 900px;
+  --xm-bp-lg: 1200px;
+  --xm-bp-xl: 1440px;
+
+  /* ---------- 布局 ---------- */
+  --xm-page-w: 1180px;
+  --xm-sidebar-w: 300px;
+}
+
+/* ==========================================================================
+   浅色平行套：跟随系统
+   ========================================================================== */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --xm-bg: #e7edf5;
+    --xm-bg-elevated: #f2f6fb;
+    --xm-surface: #ffffff;
+    --xm-surface-hover: #dde7f3;
+    --xm-border: #cdd9e8;
+    --xm-border-strong: #5a6d85;
+
+    --xm-text: #101b28;
+    --xm-text-secondary: #3f5165;
+    --xm-text-muted: #4d5f74;
+
+    --xm-accent: #1668d8;
+    --xm-accent-2: #8a4f0c;
+    --xm-accent-deep: #0f4fa8;
+    --xm-accent-contrast: #ffffff;
+    --xm-accent-soft: rgba(22, 104, 216, 0.1);
+    --xm-accent-text: #0f4fa8;
+    --xm-grad-end: #8f5210;
+
+    --xm-code-bg: #eef3fa;
+    --xm-code-border: #cdd9e8;
+
+    --xm-selection: rgba(22, 104, 216, 0.16);
+    --xm-shadow-color: rgba(22, 52, 88, 0.14);
+    --xm-glow-color: rgba(22, 104, 216, 0.14);
+    --xm-ambient-warm: rgba(240, 201, 135, 0.09);
+  }
+}
+
+/* ==========================================================================
+   浅色平行套：手动指定（JS 写入，优先级最高）
+   ========================================================================== */
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --xm-bg: #e7edf5;
+  --xm-bg-elevated: #f2f6fb;
+  --xm-surface: #ffffff;
+  --xm-surface-hover: #dde7f3;
+  --xm-border: #cdd9e8;
+  --xm-border-strong: #5a6d85;
+
+  --xm-text: #101b28;
+  --xm-text-secondary: #3f5165;
+  --xm-text-muted: #4d5f74;
+
+  --xm-accent: #1668d8;
+  --xm-accent-2: #8a4f0c;
+  --xm-accent-deep: #0f4fa8;
+  --xm-accent-contrast: #ffffff;
+  --xm-accent-soft: rgba(22, 104, 216, 0.1);
+  --xm-accent-text: #0f4fa8;
+  --xm-grad-end: #8f5210;
+
+  --xm-code-bg: #eef3fa;
+  --xm-code-border: #cdd9e8;
+
+  --xm-selection: rgba(22, 104, 216, 0.16);
+  --xm-shadow-color: rgba(22, 52, 88, 0.14);
+  --xm-glow-color: rgba(22, 104, 216, 0.14);
+  --xm-ambient-warm: rgba(240, 201, 135, 0.09);
+}

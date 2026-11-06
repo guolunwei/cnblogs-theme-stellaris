@@ -1,0 +1,1332 @@
+<!-- ===== 星轨 Stellaris · 配置（改这里就能调主题，详见 README） ===== -->
+<script>
+window.XM = {
+theme: "auto",   // "auto" 跟随系统 | "dark" 常驻深色 | "light" 常驻浅色
+accent: null,    // 例："#FF7A59"，留 null 用默认冷蓝
+logo: null,      // 例："https://.../avatar.png"，留 null 用平台默认（占位图隐藏）
+analyticsId: null,   // Baidu Tongji ID; null disables the request entirely
+cursorEffects: "https://blog-static.cnblogs.com/files/home/cursor-effects.js", // null disables; replace with your own URL
+cursorUrl: null      // override --xm-cursor at runtime; null keeps the CSS default
+};
+</script>
+
+<!-- analytics: opt-in; a pasted copy must not report to the author's account -->
+<script>
+(function () {
+var id = window.XM && window.XM.analyticsId;
+/* Only a valid 32-char hex id fires a request; anything else fails open to no load. */
+if (typeof id !== "string" || !/^[a-f0-9]{32}$/i.test(id)) return;
+var _hmt = _hmt || [];
+/* The wrapper makes this var local; publish it so hm.js sees the global queue. */
+window._hmt = window._hmt || _hmt;
+var hm = document.createElement("script");
+hm.src = "https://hm.baidu.com/hm.js?" + id;
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+<!-- cursor effect: opt-in; the default asset sits on the author's blog path -->
+<script>
+(function () {
+var url = window.XM && window.XM.cursorEffects;
+/* Only absolute http(s) URLs are injectable; anything else fails open to no load. */
+if (typeof url !== "string" || !/^https?:///i.test(url)) return;
+var s = document.createElement("script");
+s.src = url;
+document.head.appendChild(s);
+})();
+</script>
+
+<!-- ===== 星轨 Stellaris · 增强脚本（零依赖原生 JS） ===== -->
+<script>
+/* ==== adapter.js ==== */
+/* ==========================================================================
+Stellaris · DOM selector adapter
+Collects platform-private selectors in one registry so the enhancement
+layer can stay skin-agnostic. enhance.js consumes pick()/pickAll() only.
+Runs before enhance.js (see build.js JS_ORDER) as a standalone IIFE.
+========================================================================== */
+(function () {
+"use strict";
+
+var XM = window.XM || {};
+
+/* Registry is grouped by skin/skeleton. Each key holds an ordered array of
+candidate selectors; the first matching candidate wins. Multiple
+candidates absorb known cnblogs drift (see docs/adapter.md). */
+var XM_SELECTORS = {
+simplememory: {
+postBody:          ["#cnblogs_post_body", ".postCon", "#post_detail", ".postBody"],
+header:            ["#header", "#blogTitle", "header.site"],
+sideBar:           ["#sideBar", "#sidebar", ".sideBar"],
+navMenuLinks:      ["#navList a.menu", "#navList a", ".menu a"],
+blogLogo:          ["#blogLogo", ".blogLogo", "#blogLogo img"],
+blogLogoLink:      ["#lnkBlogLogo", "a#lnkBlogLogo"],
+tagCloud:          [".catListTag", "#sidebar_tag", ".tag-cloud", "#tagCloud"],
+archiveMonthItems: [".entrylistItem", ".entrylistItemPostCon", ".post-list-item"],
+archiveDayTitles:  [".day > .postTitle", ".day .postTitle", ".postTitle"],
+hljsLineTable:     ["table.hljs-ln", ".hljs-ln"],
+tocButton:         [".cnblogs-toc-button", ".toc-button"],
+/* Root-level nodes that enhance.js used to hard-code via getElementById /
+querySelectorAll. Keeping them here lets missing skeletons degrade. */
+loading:           ["#loading"],
+codeBlocks:        ["#cnblogs_post_body pre, .postCon pre"],
+mainContent:       ["#mainContent"],
+tagList:           ["#taglist, .catListTag, #sidebar_toptags"]
+},
+fallback: {
+postBody:          ["article", ".post-content", ".entry-content", "#content"],
+header:            ["header", "#top", ".site-header"],
+sideBar:           ["aside", "#side", ".sidebar"],
+navMenuLinks:      ["nav a", ".nav a"],
+blogLogo:          [".logo img", "header img"],
+blogLogoLink:      ["a.logo", 'a[href="/"]'],
+tagCloud:          [".tags", ".tagcloud", ".widget_tag_cloud"],
+archiveMonthItems: [".archive-item", ".post-list-item", ".entry-list > li"],
+archiveDayTitles:  [".post-title", "h2.postTitle", ".entry-title"],
+hljsLineTable:     ["table.hljs-ln"],
+tocButton:         [".toc-toggle", ".toc-button"],
+/* Keep code-copy usable on skins without the SimpleMemory containers. */
+codeBlocks:        ["pre"],
+mainContent:       ["main", "#content"],
+tagList:           [".tags", ".tagcloud"]
+}
+};
+
+/* Custom selectors merge per key (override, not wholesale replace). Custom
+candidates go first, built-in ones stay as a fallback. Invalid selector
+strings are rejected here so one bad value cannot poison a whole key. */
+function validSelector(s) {
+if (typeof s !== "string" || !s) return false;
+try {
+document.querySelector(s);
+return true;
+} catch (e) {
+return false;
+}
+}
+
+function asArray(v) {
+if (Array.isArray(v)) return v;
+if (typeof v === "string") return [v];
+return null;
+}
+
+function unique(list) {
+var out = [];
+for (var i = 0; i < list.length; i++) {
+if (out.indexOf(list[i]) === -1) out.push(list[i]);
+}
+return out;
+}
+
+function mergeKey(group, key, v) {
+var arr = asArray(v);
+if (!arr) return;
+var clean = arr.filter(validSelector);
+if (!clean.length) return; /* all invalid: keep the built-in candidates */
+if (!XM_SELECTORS[group]) XM_SELECTORS[group] = {};
+var base = XM_SELECTORS[group][key] || [];
+XM_SELECTORS[group][key] = unique(clean.concat(base));
+}
+
+function applyCustom(custom) {
+if (!custom || typeof custom !== "object") return;
+Object.keys(custom).forEach(function (name) {
+var v = custom[name];
+if (asArray(v)) {
+/* Flat form: { postBody: ["..."] } merges into the default group. */
+mergeKey("simplememory", name, v);
+} else if (v && typeof v === "object") {
+/* Grouped form: { simplememory: { postBody: ["..."] } }. */
+Object.keys(v).forEach(function (key) {
+mergeKey(name, key, v[key]);
+});
+}
+});
+}
+
+applyCustom(XM.selectors);
+
+function candidates(key, group) {
+var out = [];
+var primary = XM_SELECTORS[group];
+if (primary && primary[key]) out = out.concat(primary[key]);
+/* The fallback group always trails, so a missing skin node degrades quietly. */
+if (group !== "fallback" && XM_SELECTORS.fallback && XM_SELECTORS.fallback[key]) {
+out = out.concat(XM_SELECTORS.fallback[key]);
+}
+return out;
+}
+
+/* Return the first matching node for a component key, or null. No match is
+a normal outcome: the caller silently skips that component (see
+enhance.js initLogo's isolated try/catch). Never throws, never creates
+placeholder nodes, never blocks later init. */
+function pick(key, group) {
+var list = candidates(key, group || "simplememory");
+for (var i = 0; i < list.length; i++) {
+try {
+var node = document.querySelector(list[i]);
+if (node) return node;
+} catch (e) {
+continue;
+}
+}
+return null;
+}
+
+function pickAll(key, group) {
+var list = candidates(key, group || "simplememory");
+var out = [];
+for (var i = 0; i < list.length; i++) {
+try {
+var nodes = document.querySelectorAll(list[i]);
+for (var j = 0; j < nodes.length; j++) out.push(nodes[j]);
+} catch (e) {
+continue;
+}
+}
+return out;
+}
+
+/* Single public handle for enhance.js and console inspection. A second
+global alias would drift out of sync with the merged registry. */
+window.XM_ADAPTER = {
+SELECTORS: XM_SELECTORS,
+pick: pick,
+pickAll: pickAll
+};
+})();
+
+/* ==== enhance.js ==== */
+/* ==========================================================================
+星轨 Stellaris · 渐进增强脚本（原生 JS，零依赖）
+功能：三态主题 / 阅读进度 / 返回顶部 / 目录 TOC / 代码块复制 / loading 兜底
+/ window.XM.logo / 运行时页头偏移 / 原生 dialog 图片灯箱
+========================================================================== */
+(function () {
+"use strict";
+
+/* ---------- 0. 适配层接入 + 配置归一化 ---------- */
+var AD = window.XM_ADAPTER || null;
+
+/* All platform-private selectors live in adapter.js; enhance.js only asks
+for a component key. pickAll() merges every candidate, so de-duplicate. */
+function pick(key) {
+try {
+return AD && typeof AD.pick === "function" ? AD.pick(key) : null;
+} catch (e) {
+return null;
+}
+}
+function pickAll(key) {
+var list;
+try {
+list = AD && typeof AD.pickAll === "function" ? AD.pickAll(key) : [];
+} catch (e) {
+return [];
+}
+var out = [], i;
+for (i = 0; i < list.length; i++) {
+if (out.indexOf(list[i]) === -1) out.push(list[i]);
+}
+return out;
+}
+
+function isPlainObject(v) {
+return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+var FEATURE_KEYS = ["toc", "copy", "lineNumbers", "lightbox", "readingTime", "progress"];
+
+/* The value is embedded in url("...") via setProperty; reject anything that
+could close the string or inject a new CSS declaration/rule. */
+function validCursorUrl(v) {
+if (typeof v !== "string") return false;
+if (!/^(https?:\/\/|data:image\/)/i.test(v)) return false;
+return !/[";}]/.test(v);
+}
+
+/* Pure: never writes back to window.XM. Illegal values fail open to defaults
+so a partially valid config can never be half-applied. */
+function normalizeConfig(raw) {
+var src = isPlainObject(raw) ? raw : {};
+var out = {
+theme: "auto",
+accent: null,
+logo: null,
+debug: false,
+features: {},
+selectors: null,
+cursorUrl: null
+};
+var i;
+for (i = 0; i < FEATURE_KEYS.length; i++) out.features[FEATURE_KEYS[i]] = true;
+
+if (src.theme === "auto" || src.theme === "dark" || src.theme === "light") out.theme = src.theme;
+if (typeof src.accent === "string" && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(src.accent)) {
+out.accent = src.accent;
+}
+if (typeof src.logo === "string" && src.logo) out.logo = src.logo;
+if (validCursorUrl(src.cursorUrl)) out.cursorUrl = src.cursorUrl;
+if (src.debug === true) out.debug = true;
+if (isPlainObject(src.features)) {
+for (i = 0; i < FEATURE_KEYS.length; i++) {
+if (src.features[FEATURE_KEYS[i]] === false) out.features[FEATURE_KEYS[i]] = false;
+}
+}
+/* selectors are consumed by adapter.js before this script runs; keep a
+read-only reference here, never mutate the registry or window.XM. */
+if (isPlainObject(src.selectors)) out.selectors = src.selectors;
+return out;
+}
+var cfg = normalizeConfig(window.XM);
+
+function warn(msg) {
+if (cfg.debug !== true) return;
+try { console.warn("[XM] " + msg); } catch (e) {}
+}
+
+var STORE_KEY = "xm-theme-mode";
+var root = document.documentElement;
+
+/* ---------- 1. 主题三态（立即执行，避免闪白） ---------- */
+var STATE = ["auto", "dark", "light"];
+function validMode(v) {
+return v === "auto" || v === "dark" || v === "light";
+}
+/* 优先级固定 localStorage > cfg.theme > auto；非法值视为无值。
+"auto" 是合法存储值，绝不能被当作非法丢弃。 */
+function resolveMode(saved) {
+if (validMode(saved)) return saved;
+if (validMode(cfg.theme)) return cfg.theme;
+return "auto";
+}
+
+/* 只用于判读「当前外观」（深/浅），绝不驱动状态机。 */
+function effectiveMode() {
+var attr = root.getAttribute("data-theme");
+if (attr === "dark" || attr === "light") return attr;
+try {
+return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+} catch (e) {
+return "dark";
+}
+}
+
+var storageOK = true;
+var saved = null;
+try {
+saved = localStorage.getItem(STORE_KEY);
+} catch (e) {
+storageOK = false;
+}
+
+var mode = resolveMode(saved);
+/* auto 也显式写属性：tokens.css 的 :root:not([data-theme="dark"]) 依赖它。 */
+root.setAttribute("data-theme", mode);
+/* "auto" is a real stored state: persist it explicitly, never removeItem. */
+if (saved !== mode) {
+try { localStorage.setItem(STORE_KEY, mode); } catch (e) { storageOK = false; }
+}
+
+/* 自定义主色覆盖（可选）：合法时四项全写，非法时全不写 */
+function applyAccent() {
+if (!cfg.accent) return;
+root.style.setProperty("--xm-accent", cfg.accent);
+root.style.setProperty("--xm-accent-text", cfg.accent);
+root.style.setProperty("--xm-accent-soft", hexToRgba(cfg.accent, 0.14));
+/* Keep the ambient glow in sync with a custom accent; --xm-glow was an orphan. */
+root.style.setProperty("--xm-glow-color", hexToRgba(cfg.accent, 0.22));
+}
+
+function hexToRgba(hex, alpha) {
+var h = String(hex).replace("#", "");
+if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+var n = parseInt(h, 16);
+if (h.length !== 6 || isNaN(n)) return "rgba(95,178,255," + alpha + ")";
+return (
+"rgba(" +
+((n >> 16) & 255) + "," +
+((n >> 8) & 255) + "," +
+(n & 255) + "," +
+alpha + ")"
+);
+}
+
+applyAccent();
+
+/* ---------- 2. DOM 就绪后的增强 ---------- */
+function ready(fn) {
+if (document.readyState === "loading") {
+document.addEventListener("DOMContentLoaded", fn);
+} else {
+fn();
+}
+}
+
+/* 所有图标 svg 统一 aria-hidden + focusable=false；innerHTML 仅接收本文件内的静态常量，
+不拼接任何不可信字符串（TOC 目录项与 logo 一律 textContent / setAttribute）。 */
+var ICON_SUN =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>';
+var ICON_MOON =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+var ICON_AUTO =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 6.5a5.5 5.5 0 0 1 0 11"/></svg>';
+var ICON_TOP =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+var ICON_TOC =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h11M4 18h7"/><circle cx="20" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="18" r="1" fill="currentColor" stroke="none"/></svg>';
+var ICON_CHEVRON =
+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
+
+/* 「点下去会变成什么」：auto→MOON(下一态 dark)、dark→SUN(下一态 light)、light→AUTO(下一态 auto) */
+var ICON_BY_MODE = { auto: ICON_MOON, dark: ICON_SUN, light: ICON_AUTO };
+var LABEL_BY_MODE = {
+auto: "主题：跟随系统，点击切换为固定深色",
+dark: "主题：固定深色，点击切换为固定浅色",
+light: "主题：固定浅色，点击切换为跟随系统"
+};
+
+function el(tag, cls, html) {
+var n = document.createElement(tag);
+if (cls) n.className = cls;
+if (html != null) n.innerHTML = html;
+return n;
+}
+
+ready(function () {
+/* ---- 共享状态：所有组件闭包共用；任一组件失败不得中断其余初始化 ---- */
+var reduceMotion = false, rmq = null;
+function onReduceChange(e) { reduceMotion = !!(e && e.matches); }
+function scrollBehavior() { return reduceMotion ? "auto" : "smooth"; }
+
+var headerOffsetPx = 56; /* JS 未执行时的兜底，与 --xm-s14 一致 */
+var header = null, postBody = null, blocks = [];
+var headings = [];
+var bar = null, topBtn = null, fab = null, themeBtn = null;
+var tocBtn = null, tocPanel = null, tocBody = null;
+var tocBuilt = false, tocOpen = false, tocItems = [], currentActive = null, pendingFocus = null;
+var spyScheduled = false;
+var lbMask = null, lastTrigger = null, HAS_SHOWMODAL = false;
+var copyStatus = null;
+var lnTimer = null, lnObs = null, contentObs = null;
+var ticking = false;
+
+/* Each component is isolated: a failure never writes DOM, never toasts,
+and never blocks the remaining initializers (qa-checklist §3.1). */
+function guard(name, fn) {
+try { fn(); } catch (e) {
+warn(name + " skipped: " + (e && e.message ? e.message : e));
+}
+}
+
+var TOC_PANEL_ID = "xm-toc-panel";
+var TOC_TITLE_ID = "xm-toc-title";
+
+/* ---- 标题工具 ---- */
+function collectHeadings(host) {
+var out = [];
+if (!host) return out;
+Array.prototype.forEach.call(host.querySelectorAll("h2,h3"), function (h) {
+if (h.closest && h.closest("blockquote,pre,table,figcaption")) return;
+if (h.getAttribute("aria-hidden") === "true") return;
+if (h.getClientRects && h.getClientRects().length === 0) return;
+out.push(h);
+});
+return out;
+}
+
+/* 标题纯文本：排除 .cnblogs-toc-button 子树与 aria-hidden 节点，img 取 alt，合并空白 */
+function headingText(h) {
+var parts = [];
+function walk(node) {
+if (node.nodeType === 3) {
+parts.push(node.nodeValue);
+return;
+}
+if (node.nodeType !== 1) return;
+if (node.getAttribute("aria-hidden") === "true") return;
+if (node.classList && node.classList.contains("cnblogs-toc-button")) return;
+if (node.tagName === "IMG") {
+parts.push(node.getAttribute("alt") || "");
+return;
+}
+for (var i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i]);
+}
+for (var j = 0; j < h.childNodes.length; j++) walk(h.childNodes[j]);
+var t = parts.join("").replace(/\s+/g, " ").trim();
+return t || "（无标题）";
+}
+
+function slugify(s) {
+return (
+s
+.toLowerCase()
+.replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+.replace(/^-+|-+$/g, "") || "sec"
+);
+}
+
+/* 已有 id 原样保留、绝不改写；无 id 才生成带 xm-toc- 前缀的 slug 并全文档查重 */
+function ensureId(h) {
+if (h.id) return h.id;
+var base = "xm-toc-" + slugify(headingText(h));
+var id = base, n = 1;
+while (document.getElementById(id)) id = base + "-" + n++;
+h.id = id;
+return id;
+}
+function prepHeading(h) {
+var id = ensureId(h);
+if (!h.hasAttribute("data-xm-toc")) {
+h.setAttribute("data-xm-toc", "1");
+h.setAttribute("tabindex", "-1");
+}
+return id;
+}
+
+/* ---- TOC 构建 ---- */
+function buildToc() {
+var nav = el("nav", "xm-toc__nav");
+nav.setAttribute("aria-label", "文章目录");
+var topOl = el("ol", "xm-toc__list");
+topOl.setAttribute("role", "list");
+var lastH2Li = null;
+tocItems = [];
+Array.prototype.forEach.call(headings, function (h) {
+var id = prepHeading(h);
+var text = headingText(h);
+var li = el("li", "xm-toc__item" + (h.tagName === "H3" ? " xm-toc__item--l3" : ""));
+var a = el("a");
+a.setAttribute("href", "#" + encodeURIComponent(id));
+a.textContent = text; /* 禁止 innerHTML */
+li.appendChild(a);
+if (h.tagName === "H2") {
+topOl.appendChild(li);
+lastH2Li = li;
+lastH2Li.__xmSub = null;
+} else if (lastH2Li) {
+var sub = lastH2Li.__xmSub;
+if (!sub) {
+sub = el("ol", "xm-toc__list xm-toc__list--sub");
+sub.setAttribute("role", "list");
+lastH2Li.appendChild(sub);
+lastH2Li.__xmSub = sub;
+}
+sub.appendChild(li);
+} else {
+/* 只有 h3、没有前置 h2：渲染为顶层项，不造空 h2 父节点 */
+topOl.appendChild(li);
+}
+tocItems.push({ a: a, heading: h, li: li });
+});
+nav.appendChild(topOl);
+tocBody.appendChild(nav);
+tocBuilt = true;
+}
+
+/* scroll-spy：先全读 rect.top 再全写；唯一 aria-current="location" */
+function updateSpy() {
+if (!tocOpen || !tocBuilt || !tocItems.length) return;
+var line = headerOffsetPx + 16;
+var tops = tocItems.map(function (it) {
+return it.heading.getBoundingClientRect().top;
+});
+var doc = document.documentElement;
+var atBottom = doc.scrollHeight - (doc.scrollTop + doc.clientHeight) <= 32;
+var activeIdx = -1;
+if (atBottom) {
+activeIdx = tocItems.length - 1;
+} else {
+for (var i = 0; i < tops.length; i++) {
+if (tops[i] <= line && (activeIdx === -1 || tops[i] > tops[activeIdx])) activeIdx = i;
+}
+if (doc.scrollTop < 8) activeIdx = -1; /* 文章顶部不高亮任何项 */
+}
+var next = activeIdx >= 0 ? tocItems[activeIdx].a : null;
+if (next === currentActive) return; /* 仅变化时改 DOM */
+if (currentActive) {
+currentActive.removeAttribute("aria-current");
+currentActive.classList.remove("is-active");
+}
+currentActive = next;
+if (currentActive) {
+currentActive.setAttribute("aria-current", "location");
+currentActive.classList.add("is-active");
+}
+}
+
+function scheduleSpy() {
+if (spyScheduled) return;
+spyScheduled = true;
+window.requestAnimationFrame(function () {
+spyScheduled = false;
+updateSpy();
+});
+}
+
+function openToc() {
+if (tocOpen || !tocPanel) return;
+tocOpen = true;
+tocBtn.setAttribute("aria-expanded", "true");
+tocPanel.hidden = false;
+if (!tocBuilt) buildToc(); /* 首次展开才懒构建 */
+updateSpy(); /* 展开立即重算 */
+}
+function closeToc(returnFocus) {
+if (!tocOpen) return;
+tocOpen = false;
+tocBtn.setAttribute("aria-expanded", "false");
+tocPanel.hidden = true; /* 真隐藏：移出 Tab 序列与无障碍树 */
+currentActive = null;
+if (returnFocus) {
+try { tocBtn.focus(); } catch (e) {}
+}
+}
+function toggleToc() {
+if (tocOpen) closeToc(false);
+else openToc();
+}
+
+/* 滚动结束后把焦点送到目标标题（不二次跳动） */
+function whenScrollSettled(cb) {
+var done = false;
+var finish = function () {
+if (done) return;
+done = true;
+cb();
+};
+if ("onscrollend" in window) {
+var h = function () {
+window.removeEventListener("scrollend", h);
+finish();
+};
+window.addEventListener("scrollend", h, { once: true });
+setTimeout(function () {
+window.removeEventListener("scrollend", h);
+finish();
+}, 900);
+} else {
+var last = window.scrollY, stable = 0, t0 = Date.now();
+(function tick() {
+var y = window.scrollY;
+if (y === last) stable++;
+else { stable = 0; last = y; }
+if (stable >= 4 || Date.now() - t0 > 900) {
+finish();
+return;
+}
+window.requestAnimationFrame(tick);
+})();
+}
+}
+
+function buildTocPanel() {
+tocPanel = el("div", "xm-toc");
+tocPanel.id = TOC_PANEL_ID;
+tocPanel.setAttribute("aria-labelledby", TOC_TITLE_ID);
+tocPanel.hidden = true; /* 三档断点一律默认折叠 */
+
+var head = el("div", "xm-toc__head");
+var title = el("h2", "xm-toc__title");
+title.id = TOC_TITLE_ID;
+title.textContent = "目录";
+var toggle = el("button", "xm-toc__toggle");
+toggle.type = "button";
+toggle.setAttribute("aria-label", "关闭目录");
+toggle.innerHTML = ICON_CHEVRON;
+toggle.addEventListener("click", function () { closeToc(true); });
+head.appendChild(title);
+head.appendChild(toggle);
+
+tocBody = el("div", "xm-toc__body");
+tocBody.setAttribute("tabindex", "0");
+tocBody.setAttribute("role", "region");
+tocBody.setAttribute("aria-label", "目录列表");
+
+tocPanel.appendChild(head);
+tocPanel.appendChild(tocBody);
+document.body.appendChild(tocPanel);
+
+/* 点击目录项：捕获阶段同步再测一次偏移；不 preventDefault，靠 scroll-margin-top 补偿 */
+tocPanel.addEventListener(
+"click",
+function (e) {
+measureHeader();
+var a = e.target && e.target.closest ? e.target.closest("a[href^='#']") : null;
+if (!a) return;
+var hash = a.getAttribute("href").slice(1);
+var target = null;
+try { target = document.getElementById(decodeURIComponent(hash)); }
+catch (err) { target = document.getElementById(hash); }
+if (!target) return;
+if (window.innerWidth > 900) {
+pendingFocus = target;
+whenScrollSettled(function () {
+if (!pendingFocus) return;
+try { pendingFocus.focus({ preventScroll: true }); }
+catch (err) {
+try { pendingFocus.focus(); } catch (e2) {}
+}
+pendingFocus = null;
+});
+} else {
+/* ≤900px 自动收起 + 焦点回触发按钮 */
+closeToc(true);
+}
+},
+true
+);
+
+/* Modal lightbox owns the backdrop: never let its clicks collapse the TOC
+(A14). Escape is handled by the single dispatcher in initEscape(). */
+document.addEventListener("click", function (e) {
+if (!tocOpen) return;
+if (lbMask && lbMask.open) return;
+if (tocPanel.contains(e.target) || (tocBtn && tocBtn.contains(e.target))) return;
+closeToc(false);
+});
+
+/* 老浏览器降级：hashchange 后二次微调（scroll-margin-top 未生效时） */
+window.addEventListener("hashchange", function () {
+var hash = location.hash.slice(1);
+if (!hash) return;
+var t = null;
+try { t = document.getElementById(decodeURIComponent(hash)); }
+catch (err) { t = document.getElementById(hash); }
+if (!t) return;
+window.requestAnimationFrame(function () {
+var r = t.getBoundingClientRect();
+if (r.top < headerOffsetPx - 4) window.scrollBy(0, r.top - headerOffsetPx);
+});
+});
+}
+
+/* New headings added by the highlighter/lazy content: rebuild the list but
+keep existing ids (prepHeading never overwrites them), so hrefs stay put. */
+function refreshToc() {
+headings = collectHeadings(postBody);
+if (!tocBuilt || !tocPanel || !tocBody) return;
+tocBody.innerHTML = "";
+tocItems = [];
+buildToc();
+currentActive = null;
+updateSpy();
+}
+
+/* ---- 代码块辅助 ---- */
+function nativeLnTable(pre) {
+return pre.querySelector("table.hljs-ln");
+}
+function codeTextOf(pre) {
+var table = nativeLnTable(pre);
+if (table) {
+var cells = table.querySelectorAll("td.hljs-ln-code");
+if (cells.length) {
+var parts = [];
+Array.prototype.forEach.call(cells, function (td) {
+parts.push((td.textContent || "").replace(/\r?\n$/, ""));
+});
+return parts.join("\n");
+}
+}
+var code = pre.querySelector("code") || pre;
+return code.innerText || code.textContent || "";
+}
+function dropGutter(pre) {
+var g = pre.querySelector(".xm-code-ln");
+if (g) pre.removeChild(g);
+pre.classList.remove("has-ln");
+}
+function buildGutter(pre) {
+if (nativeLnTable(pre)) { dropGutter(pre); return; }
+if (pre.querySelector(".xm-code-ln")) return;
+var code = pre.querySelector("code") || pre;
+var text = code.textContent || "";
+var lines = text.replace(/\r?\n$/, "").split("\n").length;
+if (lines < 1) lines = 1;
+var gutter = document.createElement("div");
+gutter.className = "xm-code-ln";
+gutter.setAttribute("aria-hidden", "true");
+var buf = "";
+for (var i = 1; i <= lines; i++) buf += i + (i < lines ? "\n" : "");
+gutter.textContent = buf;
+/* Match the real code line-height, otherwise rows drift apart. */
+try { gutter.style.lineHeight = getComputedStyle(code).lineHeight; } catch (e) {}
+pre.insertBefore(gutter, code);
+pre.classList.add("has-ln");
+}
+function settleLn() {
+Array.prototype.forEach.call(blocks, function (pre) {
+if (nativeLnTable(pre)) dropGutter(pre);
+else buildGutter(pre);
+});
+}
+
+/* Return boolean so the caller can distinguish success from failure and
+never show "copied" when the legacy path actually failed. */
+function fallbackCopy(text) {
+var ta = document.createElement("textarea");
+ta.value = text;
+ta.setAttribute("readonly", "");
+ta.style.position = "fixed";
+ta.style.opacity = "0";
+document.body.appendChild(ta);
+ta.select();
+var ok = false;
+try { ok = !!document.execCommand("copy"); } catch (e) { ok = false; }
+document.body.removeChild(ta);
+return ok;
+}
+
+/* Synchronous clear + rAF rewrite: two rapid clicks produce two separate
+"" -> text transitions, so the live region announces each one. */
+function announce(msg) {
+if (!copyStatus) return;
+copyStatus.textContent = "";
+window.requestAnimationFrame(function () {
+copyStatus.textContent = msg;
+});
+}
+
+/* ---- 灯箱（原生 dialog + showModal） ---- */
+function markZoomable() {
+if (!cfg.features.lightbox || !postBody) return;
+Array.prototype.forEach.call(postBody.querySelectorAll("img"), function (img) {
+if (img.getAttribute("data-xm-zoom") === "1") return; /* 幂等 */
+/* Only bare images: never hijack a link-wrapped image (A03). */
+if (img.closest && img.closest("a")) return;
+/* No inline style.cursor: the cursor stays in CSS (keep.css). */
+img.setAttribute("data-xm-zoom", "1");
+img.setAttribute("tabindex", "0");
+img.setAttribute("role", "button");
+var alt = img.getAttribute("alt");
+img.setAttribute("aria-label", "放大查看图片" + (alt ? "：" + alt : ""));
+});
+}
+
+function cleanupLightbox() {
+document.body.classList.remove("xm-lb-open");
+if (lbMask) {
+var old = lbMask.querySelector("img");
+if (old) lbMask.removeChild(old);
+}
+if (lastTrigger && typeof lastTrigger.focus === "function") {
+try { lastTrigger.focus(); } catch (e) {}
+}
+lastTrigger = null;
+}
+
+function openLightbox(src, alt) {
+if (!lbMask) {
+lbMask = document.createElement("dialog");
+lbMask.className = "xm-lightbox";
+lbMask.setAttribute("aria-label", "图片查看");
+lbMask.addEventListener("click", function (e) {
+if (e.target === lbMask) closeLightbox(); /* A12: blank backdrop only */
+});
+lbMask.addEventListener("close", cleanupLightbox);
+var closeBtn = el("button", "xm-lightbox__close");
+closeBtn.type = "button";
+closeBtn.setAttribute("aria-label", "关闭图片查看");
+closeBtn.textContent = "×";
+closeBtn.addEventListener("click", function () { closeLightbox(); });
+lbMask.appendChild(closeBtn);
+document.body.appendChild(lbMask);
+} else {
+var prev = lbMask.querySelector("img");
+if (prev) lbMask.removeChild(prev);
+}
+var limg = document.createElement("img");
+limg.src = src;
+limg.alt = alt || "";
+lbMask.appendChild(limg);
+
+document.body.classList.add("xm-lb-open");
+if (HAS_SHOWMODAL) {
+lbMask.setAttribute("aria-modal", "true"); /* A07 */
+try { lbMask.showModal(); }
+catch (e) {
+lbMask.setAttribute("aria-modal", "false");
+lbMask.setAttribute("open", "");
+}
+} else {
+/* Degraded: no native modality, so state it explicitly. */
+lbMask.setAttribute("aria-modal", "false");
+lbMask.setAttribute("open", "");
+}
+var cb = lbMask.querySelector(".xm-lightbox__close");
+if (cb) { try { cb.focus(); } catch (e) {} } /* A08 */
+}
+
+function closeLightbox() {
+if (!lbMask || !lbMask.open) return;
+if (HAS_SHOWMODAL && typeof lbMask.close === "function") {
+lbMask.close(); /* fires "close" -> cleanupLightbox() */
+} else {
+lbMask.removeAttribute("open");
+cleanupLightbox();
+}
+}
+
+function openZoom(img) {
+var src = img.currentSrc || img.getAttribute("src") || "";
+if (!src) return; /* 全局不变量：绝不造 src="" 的 img */
+lastTrigger = img;
+openLightbox(src, img.getAttribute("alt") || "");
+}
+
+/* ---- 组件初始化（逐个独立 try/catch） ---- */
+function initLoadingGuard() {
+var loading = pick("loading");
+function killLoading() {
+if (loading && loading.style.display !== "none") {
+loading.style.transition = "opacity .3s ease";
+loading.style.opacity = "0";
+setTimeout(function () { loading.style.display = "none"; }, 300);
+}
+}
+window.addEventListener("load", function () { setTimeout(killLoading, 400); });
+setTimeout(killLoading, 4000);
+}
+
+function initReducedMotion() {
+try {
+rmq = window.matchMedia("(prefers-reduced-motion: reduce)");
+reduceMotion = !!rmq.matches;
+} catch (e) {}
+if (rmq) {
+if (rmq.addEventListener) rmq.addEventListener("change", onReduceChange);
+else if (rmq.addListener) rmq.addListener(onReduceChange);
+}
+}
+
+function measureHeader() {
+/* header 缺失 → 直接 return，保留 CSS 兜底 var(--xm-s14)，不写 0 */
+if (!header) return;
+var bottom = header.getBoundingClientRect().bottom + 16; /* 呼吸余量 16px = --xm-s4 */
+headerOffsetPx = Math.round(bottom);
+try { root.style.setProperty("--xm-header-offset", headerOffsetPx + "px"); } catch (e) {}
+}
+
+function initHeader() {
+header = pick("header");
+measureHeader();
+window.addEventListener("resize", function () {
+measureHeader();
+scheduleSpy();
+});
+window.addEventListener("load", function () {
+measureHeader();
+scheduleSpy();
+});
+if (header) {
+var stuck = false;
+var onHeaderScroll = function () {
+var s = window.scrollY > 24;
+if (s !== stuck) {
+stuck = s;
+header.classList.toggle("is-stuck", s);
+measureHeader();
+scheduleSpy();
+}
+};
+window.addEventListener("scroll", onHeaderScroll, { passive: true });
+onHeaderScroll();
+}
+}
+
+/* --- 导航当前项 --- */
+function initNav() {
+var here = location.pathname.replace(/\/$/, "") + location.search;
+var navLinks = pickAll("navMenuLinks");
+Array.prototype.forEach.call(navLinks, function (a) {
+var href = a.getAttribute("href") || "";
+if (!href || href.charAt(0) === "#" || href.indexOf("javascript") === 0) return;
+var abs = a.href ? a.href.replace(location.origin, "") : "";
+var key = abs.replace(/\/$/, "").split("?")[0];
+var mine = location.pathname.replace(/\/$/, "");
+if (key && key === mine) a.classList.add("is-current");
+else if (href.indexOf("javascript") === 0 && a.getAttribute("data-rss") === here) {
+a.classList.add("is-current");
+}
+});
+}
+
+/* --- 阅读进度条（features.progress） --- */
+function initProgress() {
+if (!cfg.features.progress) return;
+bar = el("div", "xm-progress");
+bar.setAttribute("aria-hidden", "true");
+document.body.appendChild(bar);
+}
+
+/* --- 悬浮按钮组：顺序固定 目录 / 主题 / 返回顶部 --- */
+function initFab() {
+fab = el("div", "xm-fab");
+if (cfg.features.toc && headings.length) {
+tocBtn = el("button", "xm-fab__btn xm-fab__btn--toc is-visible");
+tocBtn.type = "button";
+tocBtn.title = "目录";
+tocBtn.setAttribute("aria-label", "目录");
+tocBtn.setAttribute("aria-expanded", "false");
+tocBtn.setAttribute("aria-controls", TOC_PANEL_ID);
+tocBtn.innerHTML = ICON_TOC;
+tocBtn.addEventListener("click", toggleToc);
+fab.appendChild(tocBtn);
+}
+themeBtn = el("button", "xm-fab__btn xm-fab__btn--theme is-visible");
+themeBtn.type = "button";
+/* title / aria-label / 图标 / dataset.mode 统一由 paintThemeIcon() 按 mode 设置 */
+fab.appendChild(themeBtn);
+
+topBtn = el("button", "xm-fab__btn xm-fab__btn--top");
+topBtn.type = "button";
+topBtn.title = "返回顶部";
+topBtn.setAttribute("aria-label", "返回顶部");
+topBtn.innerHTML = ICON_TOP;
+topBtn.hidden = true; /* 隐藏态真隐藏，移出 Tab 序列 */
+fab.appendChild(topBtn);
+
+document.body.appendChild(fab);
+}
+
+function initTocPanel() {
+if (!cfg.features.toc || !headings.length) return;
+buildTocPanel();
+}
+
+/* --- 主题三态：单个循环按钮，动态 accessible name + aria-describedby + live 播报 --- */
+function initTheme() {
+if (!themeBtn) return;
+var liveNode = el("div", "xm-sr-only");
+liveNode.setAttribute("role", "status");
+liveNode.setAttribute("aria-live", "polite");
+liveNode.setAttribute("aria-atomic", "true");
+document.body.appendChild(liveNode);
+
+var descNode = el("div", "xm-sr-only");
+descNode.id = "xm-theme-desc";
+document.body.appendChild(descNode);
+themeBtn.setAttribute("aria-describedby", "xm-theme-desc");
+
+function appearanceText() {
+var eff = effectiveMode();
+var look = eff === "light" ? "浅色" : "深色";
+if (mode === "auto") return "当前外观：" + look + "（由系统决定）";
+return "当前外观：" + look;
+}
+function storageHint() {
+return storageOK ? "" : "；浏览器未允许保存，刷新后恢复默认";
+}
+function paintThemeIcon() {
+/* 只换按钮内部 svg 子节点与属性，绝不重建按钮元素（保焦点） */
+themeBtn.innerHTML = ICON_BY_MODE[mode];
+themeBtn.title = LABEL_BY_MODE[mode];
+themeBtn.setAttribute("aria-label", LABEL_BY_MODE[mode]);
+themeBtn.dataset.mode = mode;
+descNode.textContent = appearanceText() + storageHint();
+}
+paintThemeIcon();
+
+themeBtn.addEventListener("click", function () {
+var next = STATE[(STATE.indexOf(mode) + 1) % 3];
+mode = next;
+root.setAttribute("data-theme", next); /* auto 也显式写，不移除属性 */
+try {
+localStorage.setItem(STORE_KEY, next); /* 每次都写，含 auto；绝不 removeItem */
+} catch (e) {
+storageOK = false;
+}
+paintThemeIcon();
+var msg =
+next === "dark"
+? "已切换为固定深色"
+: next === "light"
+? "已切换为固定浅色"
+: "已切换为跟随系统，当前外观为" + (effectiveMode() === "light" ? "浅色" : "深色");
+liveNode.textContent = msg; /* 三态循环天然保证连续两次不同 */
+});
+
+/* OS 主题变化：仅 auto 态更新 desc 的「当前外观」，不换图标、不播报；手动态直接 return */
+var osMq = null;
+try { osMq = window.matchMedia("(prefers-color-scheme: dark)"); } catch (e) {}
+function onOsChange() {
+if (mode !== "auto") return;
+descNode.textContent = appearanceText() + storageHint();
+}
+if (osMq) {
+if (osMq.addEventListener) osMq.addEventListener("change", onOsChange);
+else if (osMq.addListener) osMq.addListener(onOsChange);
+}
+}
+
+/* --- 滚动：进度条 + 返回顶部显隐 + 复用同一 rAF 节流做 TOC scroll-spy --- */
+function initScroll() {
+function onScroll() {
+if (ticking) return;
+ticking = true;
+window.requestAnimationFrame(function () {
+var h = document.documentElement;
+var max = h.scrollHeight - h.clientHeight;
+var pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+if (bar) bar.style.width = pct.toFixed(2) + "%";
+if (topBtn) {
+var vis = h.scrollTop > 400;
+topBtn.classList.toggle("is-visible", vis);
+topBtn.hidden = !vis; /* CSS 与 JS 一致：隐藏即 display:none */
+}
+updateSpy(); /* 不新增 scroll 监听，复用现有 rAF 节流 */
+ticking = false;
+});
+}
+window.addEventListener("scroll", onScroll, { passive: true });
+onScroll();
+if (topBtn) {
+topBtn.addEventListener("click", function () {
+window.scrollTo({ top: 0, behavior: scrollBehavior() });
+});
+}
+}
+
+/* --- Code block copy --- */
+function initCopy() {
+if (!cfg.features.copy || !blocks.length) return;
+copyStatus = el("div", "xm-sr-only");
+copyStatus.id = "xm-copy-status";
+copyStatus.setAttribute("role", "status");
+copyStatus.setAttribute("aria-live", "polite");
+copyStatus.setAttribute("aria-atomic", "true");
+document.body.appendChild(copyStatus);
+
+Array.prototype.forEach.call(blocks, function (pre) {
+if (pre.querySelector(".xm-copy")) return;
+var btn = el("button", "xm-copy", "复制");
+btn.type = "button";
+/* Fixed accessible name: never mutate it, or the live region and the
+button would both announce (double-speak). Feedback goes to
+#xm-copy-status instead. */
+btn.setAttribute("aria-label", "复制代码");
+var doneTimer = null;
+btn.addEventListener("click", function () {
+var text = codeTextOf(pre);
+function succeed() {
+btn.textContent = "已复制";
+btn.classList.add("is-done");
+announce("已复制代码");
+if (doneTimer) clearTimeout(doneTimer); /* 再次点击先清旧定时器 */
+doneTimer = setTimeout(function () {
+btn.textContent = "复制";
+btn.classList.remove("is-done");
+doneTimer = null;
+}, 1600);
+}
+function fail() {
+announce("复制失败，请手动选择代码");
+/* 失败：按钮保持「复制」、无 is-done、不显示「已复制」 */
+}
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(text).then(
+succeed,
+function () { if (fallbackCopy(text)) succeed(); else fail(); }
+);
+} else {
+if (fallbackCopy(text)) succeed(); else fail();
+}
+});
+pre.appendChild(btn);
+});
+}
+
+/* --- Line numbers: prefer native hljs, fall back to our own gutter ---
+Native rows already align perfectly (one <tr> per line), so an injected
+gutter would duplicate them and flex would break the table. The highlighter
+may run before OR after this script, so settle via MutationObserver. */
+function initLineNumbers() {
+if (!cfg.features.lineNumbers || !blocks.length) return;
+settleLn();
+if (window.MutationObserver && blocks.length) {
+lnObs = new MutationObserver(function () {
+if (lnTimer) return;
+lnTimer = setTimeout(function () { lnTimer = null; settleLn(); }, 80);
+});
+Array.prototype.forEach.call(blocks, function (pre) {
+lnObs.observe(pre, { childList: true, subtree: true });
+});
+setTimeout(function () { if (lnObs) { lnObs.disconnect(); lnObs = null; } }, 6000);
+}
+}
+
+/* --- 图片灯箱：事件委托替代全量绑定 --- */
+function initLightbox() {
+if (!cfg.features.lightbox || !postBody) return;
+HAS_SHOWMODAL = (function () {
+try { return typeof document.createElement("dialog").showModal === "function"; }
+catch (e) { return false; }
+})();
+
+markZoomable();
+
+postBody.addEventListener("click", function (e) {
+var img = e.target && e.target.closest ? e.target.closest("img[data-xm-zoom]") : null;
+if (!img || !postBody.contains(img)) return;
+/* No preventDefault: this is a bare img, never a link (A03). */
+openZoom(img);
+});
+postBody.addEventListener("keydown", function (e) {
+if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+var t = e.target;
+if (!t || !t.getAttribute || t.getAttribute("data-xm-zoom") !== "1") return;
+e.preventDefault(); /* A06: space must not scroll the page */
+openZoom(t);
+});
+}
+
+/* --- 阅读时长：中文按字数、英文按词数估算 --- */
+function initReadingTime() {
+if (!cfg.features.readingTime || !postBody) return;
+var raw = postBody.innerText || postBody.textContent || "";
+var cn = (raw.match(/[一-龥]/g) || []).length;
+var en = (raw.replace(/[一-龥]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
+var minutes = Math.max(1, Math.round((cn + en * 6) / 320));
+var meta = el("div", "xm-readmeta");
+meta.setAttribute("aria-hidden", "true");
+meta.textContent = "约 " + minutes + " 分钟阅读";
+postBody.insertBefore(meta, postBody.firstChild);
+}
+
+/* --- window.XM.logo：内存预加载，成功才改 DOM；失败完全不干预、静默回退 --- */
+function initLogo() {
+var v = cfg.logo;
+if (typeof v !== "string" || !v) return; /* 缺失 / 空串 / 非字符串 → 零干预 */
+var url;
+try { url = new URL(v, location.href); } catch (e) { return; }
+if (url.protocol !== "http:" && url.protocol !== "https:" && url.protocol !== "data:") return;
+var img = pick("blogLogo");
+/* blogLogo 缺失 → 直接 return，不新建 img、不留空心圈 */
+if (!img) return;
+
+var reported = false;
+function fail(reason) {
+if (reported) return;
+reported = true;
+warn("logo failed to load: " + reason);
+measureHeader(); /* load|error 都重测一次（失败时值不变） */
+}
+
+var pre = new Image();
+var timer = setTimeout(function () {
+pre.onload = pre.onerror = null;
+fail("timeout");
+}, 8000);
+pre.onload = function () {
+clearTimeout(timer);
+if (!(pre.naturalWidth > 1)) { fail("naturalWidth<=1"); return; }
+try {
+/* 先写全固定尺寸属性与空 alt（防 CLS），最后提交 src 让条件隐藏失配 */
+img.setAttribute("width", "64");
+img.setAttribute("height", "64");
+img.setAttribute("alt", "");
+img.setAttribute("src", v); /* 不加 loading="lazy" */
+var lnk = pick("blogLogoLink");
+if (lnk && lnk.tagName === "A") lnk.setAttribute("aria-label", "返回主页");
+measureHeader();
+} catch (e) { fail(String(e)); }
+};
+pre.onerror = function () {
+clearTimeout(timer);
+fail("onerror");
+};
+pre.src = v;
+}
+
+/* --- 最小版 skip link / landmark：解析不到正文容器时不插 --- */
+function initSkipLink() {
+var mainHost = pick("postBody") || pick("mainContent");
+if (!mainHost) return;
+var landmark = el("span", "xm-sr-only");
+landmark.id = "xm-main";
+landmark.setAttribute("role", "main");
+landmark.setAttribute("tabindex", "-1");
+mainHost.insertBefore(landmark, mainHost.firstChild);
+
+var skip = el("a", "xm-skip");
+skip.setAttribute("href", "#xm-main");
+skip.setAttribute("tabindex", "0");
+skip.textContent = "跳到正文";
+document.body.insertBefore(skip, document.body.firstChild);
+skip.addEventListener("click", function () {
+try { landmark.focus(); } catch (e) {}
+});
+}
+
+/* --- 统一 Esc 分发器：替代 TOC / 灯箱各自的旧监听 --- */
+function initEscape() {
+document.addEventListener("keydown", function (e) {
+if (e.key !== "Escape") return;
+if (lbMask && lbMask.open) {
+/* Native modal handles Esc itself; only the degraded dialog needs us. */
+if (!HAS_SHOWMODAL) closeLightbox();
+return;
+}
+if (tocOpen) closeToc(true);
+});
+}
+
+/* --- contentObs：只观察 childList/subtree，独立 100ms 防抖 ---
+绝不观察 attributes（否则 markZoomable/prepHeading 写属性会自触发），
+绝不触碰 lnObs/lnTimer/settleLn() 及其 6s 断连策略。 */
+function initContentObserver() {
+if (!postBody || !window.MutationObserver) return;
+if (!cfg.features.toc && !cfg.features.lightbox) return;
+var t = null;
+contentObs = new MutationObserver(function () {
+if (t) return;
+t = setTimeout(function () {
+t = null;
+if (cfg.features.toc) refreshToc();
+if (cfg.features.lightbox) markZoomable();
+}, 100);
+});
+contentObs.observe(postBody, { childList: true, subtree: true });
+}
+
+/* Runtime cursor override: a valid XM.cursorUrl wins over the CSS default
+in tokens.css; an invalid/null value leaves the stylesheet in charge. */
+function initCursorOverride() {
+if (!cfg.cursorUrl) return;
+root.style.setProperty("--xm-cursor", 'url("' + cfg.cursorUrl + '"), auto');
+}
+
+/* ---- 逐个独立初始化 ---- */
+guard("resolve-nodes", function () {
+postBody = pick("postBody");
+blocks = pickAll("codeBlocks");
+});
+guard("cursor", initCursorOverride);
+guard("loading", initLoadingGuard);
+guard("reduced-motion", initReducedMotion);
+guard("header", initHeader);
+guard("nav", initNav);
+guard("progress", initProgress);
+guard("headings", function () {
+if (cfg.features.toc && postBody) headings = collectHeadings(postBody);
+});
+guard("fab", initFab);
+guard("toc-panel", initTocPanel);
+guard("theme", initTheme);
+guard("scroll", initScroll);
+guard("copy", initCopy);
+guard("line-numbers", initLineNumbers);
+guard("lightbox", initLightbox);
+guard("reading-time", initReadingTime);
+guard("logo", initLogo);
+guard("skip-link", initSkipLink);
+guard("escape", initEscape);
+guard("content-observer", initContentObserver);
+});
+})();
+
+</script>

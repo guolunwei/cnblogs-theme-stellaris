@@ -1,0 +1,201 @@
+/* ==========================================================================
+   星轨 Stellaris · 基础层
+   画布、排版、选中、滚动条、链接、入场
+   ========================================================================== */
+
+html {
+  background: var(--xm-bg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--xm-bg);
+  color: var(--xm-text);
+  font-family: var(--xm-font-sans);
+  font-size: var(--xm-fs-body);
+  line-height: var(--xm-lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* ---------- 星云：两团温度不同的柔光，冷蓝 + 暖金 ---------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -8% -10% auto -10%;
+  height: 70vh;
+  z-index: var(--xm-z-base);
+  pointer-events: none;
+  background:
+    radial-gradient(40% 55% at 16% 0%, var(--xm-glow-color) 0%, transparent 70%),
+    radial-gradient(34% 48% at 76% 6%, var(--xm-ambient-warm) 0%, transparent 72%);
+  filter: blur(30px);
+  opacity: 0.8;
+}
+
+/* ---------- 星点：极淡细颗粒，压住渐变的塑料感 ---------- */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: var(--xm-z-base);
+  pointer-events: none;
+  opacity: 0.7;
+  background-image: radial-gradient(var(--xm-star-dot) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+html[data-theme="light"] body::after {
+  background-image: radial-gradient(var(--xm-star-dot-light) 1px, transparent 1px);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) body::after {
+    background-image: radial-gradient(var(--xm-star-dot-light) 1px, transparent 1px);
+  }
+}
+
+/* ---------- 选中 ---------- */
+::selection {
+  background: var(--xm-selection);
+  color: var(--xm-text);
+}
+
+/* ---------- 滚动条 ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--xm-border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--xm-border-strong);
+  border-radius: var(--xm-r-chip);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--xm-accent);
+  background-clip: content-box;
+}
+
+/* ---------- 链接 ---------- */
+a {
+  color: var(--xm-accent-text);
+  text-decoration: none;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
+}
+a:hover {
+  color: var(--xm-accent-2);
+}
+
+/* 正文内链接：下划线由左扫到右 */
+#cnblogs_post_body a:not(.no-underline),
+.postCon a {
+  background-image: linear-gradient(var(--xm-accent-text), var(--xm-accent-text));
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--xm-dur) var(--xm-ease), color var(--xm-dur-fast) var(--xm-ease);
+}
+#cnblogs_post_body a:not(.no-underline):hover,
+.postCon a:hover {
+  background-size: 100% 1px;
+}
+
+/* ---------- 图片 ---------- */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- 入场：页头轻落，标题下划线从中展开 ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  #header {
+    animation: xm-rise var(--xm-dur-slow) var(--xm-ease) both;
+  }
+  #blogTitle h1::after {
+    content: "";
+    display: block;
+    height: 1px;
+    margin-top: var(--xm-s3);
+    background: linear-gradient(90deg, transparent, var(--xm-accent), transparent);
+    transform: scaleX(0);
+    transform-origin: center;
+    animation: xm-line var(--xm-dur-slow) var(--xm-ease) 140ms both;
+  }
+}
+
+@keyframes xm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes xm-line {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- 页头品牌节点：复用 h1 下划线末端的 8px 暖金点 ----------
+   不新增独立图形框；品牌原色不跟随 window.XM.accent。仅在 no-preference
+   下淡入，reduced-motion 终态由 components.css §16 兜底。 */
+#blogTitle h1 {
+  position: relative;
+}
+#blogTitle h1::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -3.5px; /* 8/2 − 1/2 = 3.5，中心对齐 1px 线 */
+  width: 8px;
+  height: 8px;
+  border-radius: var(--xm-r-chip);
+  background: var(--xm-accent-2);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #blogTitle h1::before {
+    animation: xm-node var(--xm-dur-slow) var(--xm-ease) 260ms both;
+  }
+}
+@keyframes xm-node {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 工具 ---------- */
+.xm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

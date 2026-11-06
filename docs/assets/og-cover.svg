@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="星轨 Stellaris · 博客园主题">
+  <defs>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E7EEF7"/>
+      <stop offset="0.7" stop-color="#5FB2FF"/>
+      <stop offset="1" stop-color="#F0C987"/>
+    </linearGradient>
+    <linearGradient id="trackGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5FB2FF"/>
+      <stop offset="1" stop-color="#F0C987"/>
+    </linearGradient>
+    <radialGradient id="glowCool" cx="16%" cy="0%" r="70%">
+      <stop offset="0" stop-color="#5FB2FF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#5FB2FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowWarm" cx="82%" cy="8%" r="55%">
+      <stop offset="0" stop-color="#F0C987" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#F0C987" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0F151D"/>
+  <rect width="1200" height="630" fill="url(#glowCool)"/>
+  <rect width="1200" height="630" fill="url(#glowWarm)"/>
+
+  <!-- 品牌符号：24x24 缩放到 160x160，置于安全区左侧 x=80 y=265 -->
+  <g transform="translate(80 265) scale(6.66667)">
+    <ellipse cx='12' cy='12' rx='10' ry='4.5' transform='rotate(-32 12 12)' fill='none' stroke='#5FB2FF' stroke-width='1.6'/>
+    <path d='M12 7.2 L13.4 10.6 L16.8 12 L13.4 13.4 L12 16.8 L10.6 13.4 L7.2 12 L10.6 10.6 Z' fill='#5FB2FF'/>
+    <circle cx='20.5' cy='6.7' r='1.9' fill='#F0C987'/>
+  </g>
+
+  <text x="284" y="338" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif" font-size="72" font-weight="700" fill="url(#titleGrad)">星轨 Stellaris</text>
+  <text x="288" y="392" font-family="'JetBrains Mono',Consolas,monospace" font-size="22" letter-spacing="4" fill="#8B9BB0">STAR ORBIT · CNBLOGS THEME</text>
+
+  <!-- 右下角 2px 冷蓝→暖金轨道段 -->
+  <line x1="860" y1="530" x2="1120" y2="470" stroke="url(#trackGrad)" stroke-width="2" stroke-linecap="round"/>
+</svg>
