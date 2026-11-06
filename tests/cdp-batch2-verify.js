@@ -133,17 +133,36 @@ const PROBE_MAIN = String.raw`(async function () {
   var dlg2 = document.querySelector("dialog.xm-lightbox");
   out.a4 = { zoomAttr: li.getAttribute("data-xm-zoom"), dlgOpen: dlg2 ? dlg2.open : "no-dialog", defaultPrevented: ev.defaultPrevented };
 
-  var cursorRuleFound = false;
-  for (var i = 0; i < document.styleSheets.length && !cursorRuleFound; i++) {
+  /* Cursor is tokenized in the final build: prove the universal rule still
+     carries var(--xm-cursor, auto) AND :root still defines the real url.
+     A var()-dependent declaration serializes to "" via the IDL style.cursor
+     getter, so read the literal through getPropertyValue("cursor"). */
+  /* The build has several selectorText==="*" rules; collect every one so a
+     later cursor-less "*" rule cannot overwrite the tokenized declaration. */
+  var universalSeen = false, universalCursors = [], cursorVarValue = null;
+  for (var i = 0; i < document.styleSheets.length; i++) {
     var rules;
     try { rules = document.styleSheets[i].cssRules; } catch (err) { continue; }
     if (!rules) continue;
     for (var j = 0; j < rules.length; j++) {
       var rule = rules[j];
-      if (rule.selectorText === "*" && rule.style && /url\(/i.test(rule.style.cursor || "")) { cursorRuleFound = true; break; }
+      if (rule.selectorText === "*" && rule.style) {
+        universalSeen = true;
+        universalCursors.push(rule.style.getPropertyValue("cursor").trim());
+      }
+      if (rule.style && rule.style.getPropertyValue) {
+        var cv = rule.style.getPropertyValue("--xm-cursor");
+        if (cv) cursorVarValue = cv.trim();
+      }
     }
   }
-  out.a5 = { inlineCursor: bare.style.cursor, cursorRuleFound: cursorRuleFound };
+  out.a5 = {
+    inlineCursor: bare.style.cursor,
+    universalExists: universalSeen,
+    universalCursors: universalCursors,
+    universalCursor: universalCursors.filter(function (v) { return v; })[0] || null,
+    cursorVar: cursorVarValue
+  };
 
   var sts = document.querySelectorAll("#xm-copy-status");
   var st = sts[0];
@@ -321,7 +340,7 @@ const LABELS = {
   "2": "showModal open + :modal",
   "3": "close btn >=44px, close + focus restore",
   "4": "link-wrapped img not hijacked",
-  "5": "no inline cursor + keep.css cursor rule",
+  "5": "no inline cursor + *{cursor:var(--xm-cursor,auto)} + :root --xm-cursor default [UPDATED]",
   "6": "unique #xm-copy-status a11y attrs",
   "7": "copy aria-label fixed before/after",
   "8": "success announce + 1600ms timer + no dup",
@@ -390,7 +409,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     a13b = G(s5, "a13b"), inv = G(s6, "a14invalid"), val = G(s7, "a14valid");
 
   const checks = [];
-  const add = (n, ok, d) => checks.push({ check: n, label: LABELS[n], pass: !!ok, detail: d });
+  const add = (n, ok, d, extra) => checks.push(Object.assign({ check: n, label: LABELS[n], pass: !!ok, detail: d }, extra || {}));
 
   add("1", a1.exists === true && a1.tag === "DIALOG", a1);
   add("2", !!s1.a2 && a2.open === true && a2.modal === true, a2 || { missing: true });
@@ -399,7 +418,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     add("3", sizeOK && a3.openAfter === false && a3.focusBack === true, { size: a3s || null, openAfter: a3.openAfter, focusBack: a3.focusBack, activeId: a3.activeId });
   }
   add("4", a4.zoomAttr === null && a4.dlgOpen === false && a4.defaultPrevented === false, a4);
-  add("5", a5.inlineCursor === "" && a5.cursorRuleFound === true, a5);
+  {
+    const cursorTokenOK = Array.isArray(a5.universalCursors) && a5.universalCursors.indexOf("var(--xm-cursor, auto)") !== -1;
+    const ok5 = a5.inlineCursor === "" && a5.universalExists === true && cursorTokenOK &&
+      typeof a5.cursorVar === "string" && /url\(/i.test(a5.cursorVar) && /mouse\.ico/i.test(a5.cursorVar);
+    add("5", ok5, a5, {
+      updated: true,
+      updateNote: "strengthened per team-lead ruling: AND of (a) a universal *{cursor} rule still present and equal to var(--xm-cursor, auto) (tokenized, cursor still effective), (b) the rule carrying --xm-cursor still contains url( and mouse.ico (default not lost). Original intent (no inline style.cursor) retained; old literal url( check replaced, not deleted. CSSOM note: read via getPropertyValue('cursor'); build has several '*' rules, so all values are collected rather than letting a later cursor-less '*' rule overwrite the tokenized one.",
+      expected: "inlineCursor='' AND universalExists=true AND some * rule cursor='var(--xm-cursor, auto)' AND cursorVar contains url( and mouse.ico",
+      actual: "inlineCursor=" + JSON.stringify(a5.inlineCursor) + " universalExists=" + a5.universalExists +
+        " universalCursorIsVar=" + cursorTokenOK +
+        " cursorVarHasUrl=" + /url\(/i.test(a5.cursorVar || "") + " cursorVarHasMouseIco=" + /mouse\.ico/i.test(a5.cursorVar || "")
+    });
+  }
   add("6", a6.count === 1 && a6.role === "status" && a6.live === "polite" && a6.atomic === "true", a6);
   {
     const ok = a7.before === "复制代码" && a7.afterSuccess === "复制代码" && a7.afterDouble === "复制代码" &&
