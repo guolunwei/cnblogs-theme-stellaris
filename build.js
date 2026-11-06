@@ -129,8 +129,11 @@ const pageEnd = `${CONFIG_BLOCK}
 <script>
 (function () {
   var url = window.XM && window.XM.cursorEffects;
-  /* Only absolute http(s) URLs are injectable; anything else fails open to no load. */
-  if (typeof url !== "string" || !/^https?:\/\//i.test(url)) return;
+  /* Only absolute http(s) URLs are injectable; anything else fails open to no load.
+     Keep this check backslash-free: this whole block lives in a template literal. */
+  if (typeof url !== "string") return;
+  var scheme = url.toLowerCase();
+  if (scheme.indexOf("http://") !== 0 && scheme.indexOf("https://") !== 0) return;
   var s = document.createElement("script");
   s.src = url;
   document.head.appendChild(s);
@@ -142,6 +145,23 @@ const pageEnd = `${CONFIG_BLOCK}
 ${js}
 </script>
 `;
+
+/* Template literals eat backslash escapes: /^https?:\/\// once shipped as
+   /^https?:/// and silently broke the whole cursor-effects script. Compile every
+   inline block before writing so a syntax error can never reach dist/ again. */
+const inlineBlocks = [];
+const scriptRe = /<script>([\s\S]*?)<\/script>/g;
+let scriptMatch;
+while ((scriptMatch = scriptRe.exec(pageEnd)) !== null) {
+  inlineBlocks.push(scriptMatch[1]);
+}
+inlineBlocks.forEach((code, i) => {
+  try {
+    new Function(code);
+  } catch (err) {
+    throw new Error("page-end inline script #" + (i + 1) + " has a syntax error: " + err.message);
+  }
+});
 
 fs.writeFileSync(path.join(OUT, "page-end.html"), pageEnd, "utf8");
 
