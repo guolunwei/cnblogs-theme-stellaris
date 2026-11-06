@@ -71,8 +71,8 @@ const ARTICLE = `<div id="topics">
 </div>
 <div class="feedback_area_title">评论列表</div>
 <div class="feedbackItem">
-  <div class="feedbackListSubtitle"><a href="#">小微</a> 2026-10-23 18:00 回复</div>
-  <div class="feedbackCon"><p>令牌化的思路很干净，改一个变量就能换肤，比揉在一起的 CSS 好维护太多。</p></div>
+  <div class="feedbackListSubtitle"><a href="#">示例读者</a> 2026-10-23 18:00 回复</div>
+  <div class="feedbackCon"><p>这里是一段用于检查评论区块段间距与行高的演示文字。</p></div>
   <div class="feedbackManage">支持(0) 反对(0) <a href="#">回复</a></div>
 </div>
 <div id="comment_form_container">
