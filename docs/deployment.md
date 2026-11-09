@@ -12,7 +12,26 @@
 |---|---|
 | 页面定制CSS代码 | `dist/custom.paste.css` |
 | 页首HTML代码 | `dist/page-begin.paste.html` |
-| 页脚HTML代码 | `dist/page-end.paste.html` |
+| 页脚HTML代码 | `dist/page-end.paste.html`（完整离线版）或 `dist/page-end.cdn.paste.html`（精简版） |
+
+## 精简版（CSS 内联 + JS 走 jsDelivr 外链）
+
+除上面的完整离线版，还可以用精简版：CSS 与页首两框不变，页脚改贴
+`dist/page-end.cdn.paste.html`（约 2 KB）。其中 `window.XM` 配置段与两个条件注入器仍内联，
+增强主脚本改为同步外链：
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/guolunwei/cnblogs-theme-stellaris@main/dist/stellaris.js"></script>
+```
+
+`dist/stellaris.js` 由 `src/adapter.js` + `src/enhance.js` 拼接（约 50KB），托管在 jsDelivr；
+仓库当前无 tag，URL 用 `@main`。CSS 仍必须整框内联（`dist/custom.paste.css`），不能外链：
+外链样式表会 FOUC，先以平台默认皮肤渲染再重排。
+
+- **CDN 不可达时的降级**：内联的 CSS / 页首不受影响，视觉与布局仍在；只有 `stellaris.js`
+  提供的交互增强暂时失效，页面不会白屏。需要完全离线可用时，把页脚框整份换成
+  `dist/page-end.paste.html`（完整离线版）即可切回，另外两个框不用动。
+- 下面 ①~⑥ 的粘贴手法、二次 `Ctrl+A`、缓存戳与读回核验，对两种装法都适用。
 
 ## ① 必须用 dist/*.paste.*，不要手工往框末尾追加补丁
 

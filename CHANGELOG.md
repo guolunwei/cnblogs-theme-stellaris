@@ -7,6 +7,21 @@
 ### 计划中
 - 将 `tests/` 下的诊断脚本改为统一读取 `XM_CHROME` 环境变量，进一步去掉内置默认路径。
 
+## [0.3.0] - 2026-11-09（未发布）
+
+### 新增
+- 第二种安装方式「精简版」：CSS 仍整框内联（`dist/custom.paste.css`），页脚改贴
+  `dist/page-end.cdn.paste.html`（约 2 KB）——`window.XM` 配置段与两个条件注入器内联，
+  增强主脚本以同步外链引用 jsDelivr 上的 `dist/stellaris.js`。
+- 新增产物 `dist/stellaris.js`：`src/adapter.js` + `src/enhance.js` 拼接（约 50KB），
+  供 `https://cdn.jsdelivr.net/gh/guolunwei/cnblogs-theme-stellaris@main/dist/stellaris.js` 外链；
+  仓库当前无 tag，URL 用 `@main`。
+- 两种装法并存：精简版（改配置 / 升级只动页脚几行，依赖 jsDelivr 可用性）与完整离线版
+  （零外部请求、断网可用，升级需整框重贴）；README、`docs/deployment.md`、
+  `docs/configuration.md`、`CONTRIBUTING.md` 同步说明。
+- 原三框整框产物字节不变：`dist/custom.paste.css`(40636 B) /
+  `dist/page-begin.paste.html`(717 B) / `dist/page-end.paste.html`(44749 B)。
+
 ## [0.2.1] - 2026-11-06
 
 ### 修复

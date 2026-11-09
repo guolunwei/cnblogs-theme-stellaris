@@ -3,11 +3,17 @@
  * 星轨 Stellaris · 构建脚本
  * 用法：node build.js
  * 产出：
- *   dist/custom.css        可读版 CSS（页面定制CSS代码 · 源文件，改样式改这里）
- *   dist/custom.min.css    压缩版 CSS（同上，单行，粘贴更稳）
- *   dist/page-begin.html   页首HTML代码（loading spinner，不含 JS）
- *   dist/page-end.html     页脚HTML代码（统计 + 光标特效 + 配置 + 增强脚本）
- *   dist/deploy.md         粘贴位置说明
+ *   dist/custom.css              可读版 CSS（页面定制CSS代码 · 源文件，改样式改这里）
+ *   dist/custom.min.css          压缩版 CSS（同上，单行，粘贴更稳）
+ *   dist/custom.paste.css        粘贴版 CSS（去前导空白）
+ *   dist/page-begin.html         页首HTML代码（loading spinner，不含 JS）
+ *   dist/page-begin.paste.html   页首粘贴版
+ *   dist/page-end.html           页脚HTML代码（配置 + 统计 + 光标特效 + 内联增强脚本）
+ *   dist/page-end.paste.html     页脚粘贴版（全内联，默认安装方式）
+ *   dist/config.paste.html       配置段独立快照（不是第 4 个粘贴框）
+ *   dist/stellaris.js            增强脚本独立产物（adapter.js + enhance.js，供 CDN 外链）
+ *   dist/page-end.cdn.html       精简页脚可读版（①②③ 内联 + ④ 外链）
+ *   dist/page-end.cdn.paste.html 精简页脚粘贴版
  */
 const fs = require("fs");
 const path = require("path");
@@ -146,35 +152,69 @@ ${js}
 </script>
 `;
 
-/* Template literals eat backslash escapes: /^https?:\/\// once shipped as
-   /^https?:/// and silently broke the whole cursor-effects script. Compile every
-   inline block before writing so a syntax error can never reach dist/ again. */
-const inlineBlocks = [];
-const scriptRe = /<script>([\s\S]*?)<\/script>/g;
-let scriptMatch;
-while ((scriptMatch = scriptRe.exec(pageEnd)) !== null) {
-  inlineBlocks.push(scriptMatch[1]);
-}
-inlineBlocks.forEach((code, i) => {
+/* ---------- 构建期语法闸门 ----------
+ * Template literals eat backslash escapes: /^https?:\/\// once shipped as
+ * /^https?:/// and silently broke the whole cursor-effects script. Compile every
+ * inline block and the standalone JS before writing so a syntax error can never
+ * reach dist/ again. An external <script src> has no inline body and never
+ * matches scriptRe, so the CDN footer yields one fewer block — that is expected.
+ * Both the inline loop and the standalone file share compile(). */
+function compile(code, label) {
   try {
     new Function(code);
   } catch (err) {
-    throw new Error("page-end inline script #" + (i + 1) + " has a syntax error: " + err.message);
+    throw new Error(label + " has a syntax error: " + err.message);
   }
-});
+}
 
-fs.writeFileSync(path.join(OUT, "page-end.html"), pageEnd, "utf8");
+function compileInlineBlocks(html, label) {
+  const scriptRe = /<script>([\s\S]*?)<\/script>/g;
+  let match, n = 0;
+  while ((match = scriptRe.exec(html)) !== null) {
+    compile(match[1], label + " inline script #" + (++n));
+  }
+  return n;
+}
 
 /* 粘贴版：去掉每行前导空白。
  * 博客园页脚框的 CodeMirror 开着自动缩进，如果贴带缩进的文本，它会在原有缩进上
  * 再叠一层，而且逐行累积——贴一次往里嵌一层，改主题再贴一次又深一层。
  * 贴这一份，让 CodeMirror 自己排版，重复粘贴结果才稳定。 */
-const pageEndPaste = pageEnd
+const stripLeading = (html) => html
   .split("\n")
   .map((l) => l.replace(/^[ \t]+/, ""))
   .join("\n");
+const pageEndPaste = stripLeading(pageEnd);
 
+/* ---------- 精简页脚（JS 走 CDN 外链） ----------
+ * 纯增量产物：默认 page-end.html / page-end.paste.html 逐字节不变，线上三框与已调通
+ * 的部署链路不受影响。这里只把第 ④ 段内联增强脚本换成同步外链标签，①②③ 保持内联。
+ * @main 指向仓库真实存在的 stellaris.js；禁用 async/defer（防闪白属性与 load 监听
+ * 依赖同步执行），不加 SRI（分支内容可变，不适合完整性校验）。 */
+const CDN_SCRIPT_TAG = `<script src="https://cdn.jsdelivr.net/gh/guolunwei/cnblogs-theme-stellaris@main/dist/stellaris.js"></script>`;
+/* The 4th inline block is unique in pageEnd (js is ~50KB and has no </script
+   token). Replace by string, never re-embed in a template literal, so enhance.js
+   regex backslashes survive into the standalone file. */
+const enhanceInline = `<script>\n${js}\n</script>`;
+if (!pageEnd.includes(enhanceInline)) {
+  throw new Error("cannot locate the inline enhance block in pageEnd");
+}
+const pageEndCdn = pageEnd.replace(enhanceInline, () => CDN_SCRIPT_TAG);
+const pageEndCdnPaste = stripLeading(pageEndCdn);
+
+/* Compile the exact strings written to dist/. */
+compile(js, "dist/stellaris.js");
+compileInlineBlocks(pageEnd, "page-end.html");
+compileInlineBlocks(pageEndPaste, "page-end.paste.html");
+compileInlineBlocks(pageEndCdn, "page-end.cdn.html");
+compileInlineBlocks(pageEndCdnPaste, "page-end.cdn.paste.html");
+
+/* Raw bytes from fs.readFileSync — never re-embedded in a template literal. */
+fs.writeFileSync(path.join(OUT, "stellaris.js"), js, "utf8");
+fs.writeFileSync(path.join(OUT, "page-end.html"), pageEnd, "utf8");
 fs.writeFileSync(path.join(OUT, "page-end.paste.html"), pageEndPaste, "utf8");
+fs.writeFileSync(path.join(OUT, "page-end.cdn.html"), pageEndCdn, "utf8");
+fs.writeFileSync(path.join(OUT, "page-end.cdn.paste.html"), pageEndCdnPaste, "utf8");
 
 /* Config-only snapshot for docs / copy convenience. NOT a 4th paste box:
    the footer box already contains this exact block. */
@@ -204,3 +244,6 @@ console.log("  page-begin.html   " + kb(fs.statSync(path.join(OUT, "page-begin.h
 console.log("  page-end.html     " + kb(fs.statSync(path.join(OUT, "page-end.html")).size) + "  （粘贴到「页脚HTML代码」，用 .paste.html 版）");
 console.log("  *.paste.html      " + kb(fs.statSync(path.join(OUT, "page-end.paste.html")).size) + "  （去前导空白，CodeMirror 自动缩进不会累积）");
 console.log("  config.paste.html " + kb(fs.statSync(path.join(OUT, "config.paste.html")).size) + "  (config snapshot, not a 4th paste box)");
+console.log("  stellaris.js      " + kb(fs.statSync(path.join(OUT, "stellaris.js")).size) + "  （增强脚本独立产物，供 CDN 外链）");
+console.log("  page-end.cdn.html " + kb(fs.statSync(path.join(OUT, "page-end.cdn.html")).size) + "  （精简页脚可读版，④ 走外链）");
+console.log("  page-end.cdn.paste.html " + kb(fs.statSync(path.join(OUT, "page-end.cdn.paste.html")).size) + "  （精简页脚粘贴版，①②③ 内联 + ④ 外链）");

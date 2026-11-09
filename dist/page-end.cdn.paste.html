@@ -1,0 +1,45 @@
+<!-- ===== 星轨 Stellaris · 配置（改这里就能调主题，详见 README） ===== -->
+<script>
+window.XM = {
+theme: "auto",   // "auto" 跟随系统 | "dark" 常驻深色 | "light" 常驻浅色
+accent: null,    // 例："#FF7A59"，留 null 用默认冷蓝
+logo: null,      // 例："https://.../avatar.png"，留 null 用平台默认（占位图隐藏）
+analyticsId: null,   // Baidu Tongji ID; null disables the request entirely
+cursorEffects: "https://blog-static.cnblogs.com/files/home/cursor-effects.js", // null disables; replace with your own URL
+cursorUrl: null      // override --xm-cursor at runtime; null keeps the CSS default
+};
+</script>
+
+<!-- analytics: opt-in; a pasted copy must not report to the author's account -->
+<script>
+(function () {
+var id = window.XM && window.XM.analyticsId;
+/* Only a valid 32-char hex id fires a request; anything else fails open to no load. */
+if (typeof id !== "string" || !/^[a-f0-9]{32}$/i.test(id)) return;
+var _hmt = _hmt || [];
+/* The wrapper makes this var local; publish it so hm.js sees the global queue. */
+window._hmt = window._hmt || _hmt;
+var hm = document.createElement("script");
+hm.src = "https://hm.baidu.com/hm.js?" + id;
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+<!-- cursor effect: opt-in; the default asset sits on the author's blog path -->
+<script>
+(function () {
+var url = window.XM && window.XM.cursorEffects;
+/* Only absolute http(s) URLs are injectable; anything else fails open to no load.
+Keep this check backslash-free: this whole block lives in a template literal. */
+if (typeof url !== "string") return;
+var scheme = url.toLowerCase();
+if (scheme.indexOf("http://") !== 0 && scheme.indexOf("https://") !== 0) return;
+var s = document.createElement("script");
+s.src = url;
+document.head.appendChild(s);
+})();
+</script>
+
+<!-- ===== 星轨 Stellaris · 增强脚本（零依赖原生 JS） ===== -->
+<script src="https://cdn.jsdelivr.net/gh/guolunwei/cnblogs-theme-stellaris@main/dist/stellaris.js"></script>

@@ -59,6 +59,8 @@
 | 2 | 页首HTML代码 | `dist/page-begin.paste.html` | 内联 SVG favicon（data URI）+ loading spinner，无 JS |
 | 3 | 页脚HTML代码 | `dist/page-end.paste.html` | 配置段（第 1 段）+ 可选资源条件注入器 + 增强主脚本 |
 
+> **还有一种「精简版」装法**：CSS 与页首两框完全不变，只把页脚换成 `dist/page-end.cdn.paste.html`（约 2 KB）——配置段和两个可选资源注入器仍内联，约 50 KB 的增强主脚本 `dist/stellaris.js` 改走 jsDelivr 外链。好处是改配置、升级增强脚本都不用重贴 44 KB 的大框；代价是依赖 CDN 可用性（挂了只影响 TOC、复制、灯箱等交互增强，视觉样式仍完整），也可随时切回上面的完整离线版。仓库 README 里两种装法并列，按自己的情况选一种，不要混贴。
+
 两点容易踩：
 
 - **只能用 `dist/*.paste.*`**。后台 CodeMirror 开着自动缩进，直接贴带缩进的文本会逐行累积，`*.paste.*` 已去掉每行前导空白，重复粘贴幂等。不要在框里原有内容末尾手工追加补丁，也不要用单行压缩版。

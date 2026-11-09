@@ -6,12 +6,20 @@
 |---|---|---|
 | 页面定制CSS代码 | `dist/custom.paste.css` | 主题 CSS |
 | 页首HTML代码 | `dist/page-begin.paste.html` | 内联 SVG favicon（data URI）+ loading spinner，无 JS |
-| 页脚HTML代码 | `dist/page-end.paste.html` | 配置段 + 可选资源注入器（统计 / 光标特效）+ 增强主脚本 |
+| 页脚HTML代码 | `dist/page-end.paste.html`（完整离线版）或 `dist/page-end.cdn.paste.html`（精简版） | 配置段 + 可选资源注入器（统计 / 光标特效）+ 增强主脚本（完整版内联 / 精简版走外链） |
 
-页脚框里是 **4 段独立的 `<script>`**，顺序固定：① `window.XM` 配置段（**第 1 段**）、
-② 百度统计条件注入器、③ 光标特效条件注入器、④ 增强主脚本（`adapter.js` + `enhance.js`）。
+页脚框按装法分两种，配置段都固定在最前：
+
+- **完整离线版**（`dist/page-end.paste.html`）：**4 段独立的 `<script>`**，顺序固定——
+  ① `window.XM` 配置段（**第 1 段**）、② 百度统计条件注入器、③ 光标特效条件注入器、
+  ④ 增强主脚本（`adapter.js` + `enhance.js`，整段内联）。
+- **精简版**（`dist/page-end.cdn.paste.html`）：**3 段内联 + 1 个同步外链**——前 3 段同上，
+  第 4 段换成 `<script src="https://cdn.jsdelivr.net/gh/guolunwei/cnblogs-theme-stellaris@main/dist/stellaris.js"></script>`。
+  `dist/stellaris.js` 即 `adapter.js` + `enhance.js` 拼接产物（约 50KB），由 jsDelivr 下发；
+  仓库无 tag，URL 用 `@main`。两种装法的 CSS 都仍整框内联，不能外链。
+
 配置段必须排在最前：两个注入器要先读到 `window.XM`，才能决定要不要加载资源。
-正因为配置单独成段且排在最前，「改配置不用重贴主脚本」才成立。
+正因为配置单独成段且排在最前，「改配置不用重贴主脚本」才成立（两种装法都一样）。
 
 > `dist/config.paste.html` 是**配置段独立快照**（只含 `window.XM` 那一个 `<script>` 块），
 > 供查看与单独复制，**不是第四个粘贴框**。不要把它贴到页首或另开一个框。

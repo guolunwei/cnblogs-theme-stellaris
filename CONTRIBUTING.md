@@ -33,6 +33,9 @@ node build.js
 
 - 只用 Node 内置模块，推荐 Node 18+。
 - 产物写到 `dist/`，`dist/*.paste.*` 是给用户粘贴的版本（已去每行前导空白，重复粘贴幂等）。
+- 精简版产物：`dist/stellaris.js` 由 `src/adapter.js` + `src/enhance.js` 拼接生成，供 jsDelivr 外链；
+  `dist/page-end.cdn.paste.html` 是精简版页脚（配置段 + 两个条件注入器 + 该外链 `<script>`）。
+  原三框整框产物 `dist/custom.paste.css` / `page-begin.paste.html` / `page-end.paste.html` 保持不变。
 - 校验构建改动而不覆盖现有产物时，输出到临时目录：
   ```bash
   XM_BUILD_OUT=dist/.preview node build.js
