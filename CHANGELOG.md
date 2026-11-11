@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### 变更
+- 页头重做为约 63px 单行工具条：`#header` 改 flex，`#blogTitle` 与 `#navigator` 同行，空 `h2` 与 `.blogStats` 默认隐藏；`--xm-fs-display` 由 34px 收为 18px（移动端 16px）；移动端 `#header` 不换行、`#navigator` 横向滚动。
+- 删除标题三色渐变，改纯色 `var(--xm-text)`，并显式重置 `-webkit-text-fill-color: currentColor`，避免继承的透明填充让整行标题不可见。
+- 删除 `base.css` 的 `#blogTitle h1::before` 8px 暖金点与 `@keyframes xm-node`；侧栏 `.catListTitle::before` 改 2px 冷蓝竖轨、新增 `::after` 28px 冷蓝轨道段，`.entrylistTitle::before` 改为 `display:none`。
+- 新增纯冷蓝页头星轨装饰：`#header::after` 132px 轨道线、`#blogTitle::before` 12px 四分之一圆弧、`#blogTitle::after` 4px 星点；当前导航项加 `--xm-accent-soft` 淡底，轨道段位于 `bottom:0`。
+- 底部四个 `#green_channel_*` 按钮统一为中性细边框胶囊，`digg` 作冷蓝主操作底。
+- tagline 取自后台「博客子标题」字段（`#blogTitle h2:not(:empty)`），不硬编码品牌名，不新增 `window.XM.tagline`。
+- 范围边界：`--xm-grad-end` 暖金未删，仍用于卡片扫光 / 引用竖条 / 进度条；「冷蓝管技术、暖金管人」的色彩分工不变。
+
 ### 计划中
 - 将 `tests/` 下的诊断脚本改为统一读取 `XM_CHROME` 环境变量，进一步去掉内置默认路径。
 

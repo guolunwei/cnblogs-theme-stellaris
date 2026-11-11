@@ -63,7 +63,7 @@
 
 | 后台输入框 | 粘贴文件 |
 |---|---|
-| 页面定制CSS代码 | `dist/custom.paste.css`（40636 B，整框内联） |
+| 页面定制CSS代码 | `dist/custom.paste.css`（整框内联，见 dist/） |
 | 页首HTML代码 | `dist/page-begin.paste.html`（717 B） |
 | 页脚HTML代码 | `dist/page-end.cdn.paste.html`（约 2 KB） |
 
@@ -94,7 +94,7 @@ window.XM = {
 
 | 后台输入框 | 粘贴文件 |
 |---|---|
-| 页面定制CSS代码 | `dist/custom.paste.css`（40636 B，整框内联） |
+| 页面定制CSS代码 | `dist/custom.paste.css`（整框内联，见 dist/） |
 | 页首HTML代码 | `dist/page-begin.paste.html`（717 B） |
 | 页脚HTML代码 | `dist/page-end.paste.html`（44749 B） |
 
@@ -180,13 +180,13 @@ xm-theme/
 │   ├── adapter.js        选择器适配层：XM_SELECTORS 注册表 + pick()
 │   └── enhance.js        渐进增强主脚本（零依赖原生 JS）
 ├── dist/                 交付物：两种装法共用 CSS / 页首，页脚二选一
-│   ├── custom.paste.css         页面定制CSS代码（40636 B，两装法都整框内联）
+│   ├── custom.paste.css         页面定制CSS代码（整框内联，两装法共用，见 dist/）
 │   ├── page-begin.paste.html    页首HTML代码（717 B）
 │   ├── page-end.paste.html      方式二完整离线版页脚（44749 B，4 段内联 script）
 │   ├── page-end.cdn.paste.html  方式一精简版页脚（3 段内联 + 1 个外链 script）
 │   ├── stellaris.js             adapter.js + enhance.js 拼接，供 jsDelivr 外链（约 50KB）
 │   └── config.paste.html        配置段独立快照（不是第四个框）
-├── examples/             本地预览生成脚本 mkpreview.js（生成的预览 HTML / 截图不入库）
+├── examples/             本地预览生成脚本 mkpreview.js / mk-redesign-preview.js（生成的预览 HTML / 截图不入库）
 ├── docs/                 部署、配置、适配层文档
 └── tests/                CDP 一键回归
 ```

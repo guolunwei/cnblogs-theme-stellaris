@@ -51,7 +51,7 @@
   --xm-accent-contrast: #08131f;    /* 压在主按钮上的文字（深墨，不是白） */
   --xm-accent-soft: rgba(95, 178, 255, 0.14);
   --xm-accent-text: #5fb2ff;        /* 作为文字/链接出现 */
-  --xm-grad-end: #f0c987;           /* 标题渐变终点：暖金 */
+  --xm-grad-end: #f0c987;           /* warm-gold gradient end: card sheen / quote bar / progress */
 
   /* ---------- 代码 ---------- */
   --xm-code-bg: #0b1118;
@@ -93,7 +93,7 @@
     Consolas, "Courier New", "Sarasa Mono SC", "Noto Sans Mono CJK SC",
     "Source Han Mono SC", "PingFang SC", "Microsoft YaHei", monospace;
 
-  --xm-fs-display: 34px;
+  --xm-fs-display: 18px;
   --xm-fs-h1: 28px;
   --xm-fs-h2: 22px;
   --xm-fs-h3: 17px;
@@ -351,20 +351,10 @@ img {
   height: auto;
 }
 
-/* ---------- 入场：页头轻落，标题下划线从中展开 ---------- */
+/* ---------- 入场：页头轻落 ---------- */
 @media (prefers-reduced-motion: no-preference) {
   #header {
     animation: xm-rise var(--xm-dur-slow) var(--xm-ease) both;
-  }
-  #blogTitle h1::after {
-    content: "";
-    display: block;
-    height: 1px;
-    margin-top: var(--xm-s3);
-    background: linear-gradient(90deg, transparent, var(--xm-accent), transparent);
-    transform: scaleX(0);
-    transform-origin: center;
-    animation: xm-line var(--xm-dur-slow) var(--xm-ease) 140ms both;
   }
 }
 
@@ -372,45 +362,6 @@ img {
   from {
     opacity: 0;
     transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes xm-line {
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/* ---------- 页头品牌节点：复用 h1 下划线末端的 8px 暖金点 ----------
-   不新增独立图形框；品牌原色不跟随 window.XM.accent。仅在 no-preference
-   下淡入，reduced-motion 终态由 components.css §16 兜底。 */
-#blogTitle h1 {
-  position: relative;
-}
-#blogTitle h1::before {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -3.5px; /* 8/2 − 1/2 = 3.5，中心对齐 1px 线 */
-  width: 8px;
-  height: 8px;
-  border-radius: var(--xm-r-chip);
-  background: var(--xm-accent-2);
-  opacity: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  #blogTitle h1::before {
-    animation: xm-node var(--xm-dur-slow) var(--xm-ease) 260ms both;
-  }
-}
-@keyframes xm-node {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
   }
   to {
     opacity: 1;
@@ -445,19 +396,37 @@ img {
   padding: 0 var(--xm-s6) var(--xm-s18);
 }
 
-/* ---------- 页头：不铺大图，实底 + 发丝线 + 24px 内边距 ---------- */
+/* One-line toolbar: brand + navigator share one compact sticky row (~56-64px). */
 #header {
   position: sticky;
   top: 0;
   z-index: var(--xm-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--xm-s5);
   margin: 0 calc(-1 * var(--xm-s6));
-  padding: var(--xm-s8) var(--xm-s6) var(--xm-s6);
-  background: var(--xm-bg-elevated);
+  padding: var(--xm-s3) var(--xm-s6);
+  /* Barely-there cool-blue tint: the single accent focus on an otherwise neutral bar. */
+  background: color-mix(in srgb, var(--xm-bg-elevated) 95%, var(--xm-accent));
   border-bottom: var(--xm-bw) solid var(--xm-border);
   transition: background-color var(--xm-dur) var(--xm-ease), backdrop-filter var(--xm-dur) var(--xm-ease);
 }
 
-/* 滚动后页头转毛玻璃（JS 加 .is-stuck） */
+/* A 132px cool-blue track over the left end of the hairline border. #header is
+   sticky (already positioned) so it is the containing block; the pseudo element
+   is absolute and never participates in the flex row or grows its height. */
+#header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 132px;
+  height: 1px;
+  background: var(--xm-accent);
+  pointer-events: none;
+}
+
+/* Scrolled state stays translucent so backdrop-filter still shows through. */
 #header.is-stuck {
   background: color-mix(in srgb, var(--xm-bg-elevated) 78%, transparent);
   backdrop-filter: blur(12px) saturate(140%);
@@ -487,55 +456,101 @@ img {
   display: none;
 }
 
+/* Brand block: a quarter-orbit arc + endpoint star on the left, h1 and an
+   optional tagline sharing one flex row. Both pseudo elements are absolute, so
+   the 12x12 decoration cannot grow the 63px toolbar; padding-left reserves room. */
+#blogTitle {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--xm-s2);
+  padding-left: 24px;
+}
+#blogTitle::before,
+#blogTitle::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+/* 12x12 quarter circle (top-right corner) in cool blue, no image/gradient. */
+#blogTitle::before {
+  left: 0;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 1.5px solid var(--xm-accent);
+  border-right: 1.5px solid var(--xm-accent);
+  border-top-right-radius: 12px;
+  transform: translateY(-50%);
+}
+/* Small star sitting on the arc's lower-right endpoint. */
+#blogTitle::after {
+  left: 10px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--xm-accent);
+  transform: translateY(4px);
+}
+
 #blogTitle h1 {
   margin: 0;
   font-size: var(--xm-fs-display);
-  font-weight: 700;
+  font-weight: 600;
   line-height: var(--xm-lh-display);
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
+/* Solid colour, no gradient. Explicitly reset the inherited
+   -webkit-text-fill-color: transparent or the title disappears entirely. */
 #blogTitle h1 a {
   color: var(--xm-text);
-  background: linear-gradient(
-    100deg,
-    var(--xm-text) 26%,
-    var(--xm-accent) 72%,
-    var(--xm-grad-end) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: filter var(--xm-dur) var(--xm-ease);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
 }
 #blogTitle h1 a:hover {
-  filter: brightness(1.16) saturate(1.12);
+  color: var(--xm-accent-text);
 }
 
+/* The blog admin "博客子标题" field renders into <h2>. Show it only when it has
+   content, on the same flex row as h1 so it never adds height. No hard-coded
+   brand name and no new JS config token (pure CSS). */
 #blogTitle h2 {
-  margin: var(--xm-s3) 0 0;
+  display: none;
+  margin: 0;
   font-family: var(--xm-font-mono);
   font-size: var(--xm-fs-caption);
   font-weight: 400;
   line-height: var(--xm-lh-caption);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--xm-text-muted);
+  white-space: nowrap;
+}
+#blogTitle h2:not(:empty) {
+  display: block;
 }
 
 /* ---------- 导航 ---------- */
 #navigator {
-  margin-top: var(--xm-s8);
-  border-top: var(--xm-bw) solid var(--xm-border);
-  border-bottom: var(--xm-bw) solid var(--xm-border);
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
 #navList {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--xm-s2);
   margin: 0;
-  padding: var(--xm-s3) 0;
+  padding: 0;
   list-style: none;
 }
 
@@ -561,20 +576,25 @@ img {
   color: var(--xm-text);
   background: var(--xm-surface-hover);
 }
+/* Current item is the single accent focus: faint cool-blue fill + cool-blue text. */
 #navList a.menu.is-current {
   color: var(--xm-accent-text);
+  background: var(--xm-accent-soft);
 }
 
-/* Current page = a lit track segment, not a dot sitting on the label. */
+/* Current page = a lit track segment, not a dot sitting on the label.
+   The navigator has no border now, so the track sits inside the anchor's
+   bottom padding (bottom:0) instead of hanging below the old border.
+   Pure cool blue now: no warm-gold (--xm-grad-end) tail. */
 #navList a.menu::after {
   content: "";
   position: absolute;
   left: var(--xm-s3);
   right: var(--xm-s3);
-  bottom: calc(-1 * var(--xm-s1));
+  bottom: 0;
   height: 2px;
   border-radius: var(--xm-r-chip);
-  background: linear-gradient(90deg, var(--xm-accent), var(--xm-grad-end));
+  background: linear-gradient(90deg, var(--xm-accent), transparent);
   transform: scaleX(0);
   transform-origin: left center;
   opacity: 0;
@@ -587,13 +607,11 @@ img {
   opacity: 1;
 }
 
-/* ---------- 统计（等宽，元信息） ---------- */
+/* ---------- 统计 ---------- */
+/* Independent stats row removed: lowest information value, and the user
+   explicitly objected to the reading space it consumed. */
 .blogStats {
-  margin-top: var(--xm-s4);
-  font-family: var(--xm-font-mono);
-  font-size: var(--xm-fs-caption);
-  line-height: var(--xm-lh-caption);
-  color: var(--xm-text-muted);
+  display: none;
 }
 
 /* ---------- 主体双栏 ---------- */
@@ -667,11 +685,40 @@ img {
     padding: 0 var(--xm-s4) var(--xm-s14);
   }
   #header {
+    /* Keep ONE row on phones. flex-wrap:wrap made the browser decide to wrap
+       BEFORE shrinking the navigator (its 6-item hypothetical width is wide),
+       producing a 113px two-line toolbar. nowrap forces the navigator to
+       shrink (min-width:0) and scroll its own menu horizontally instead. */
+    flex-wrap: nowrap;
     margin: 0 calc(-1 * var(--xm-s4));
-    padding: var(--xm-s6) var(--xm-s4) var(--xm-s5);
+    padding: var(--xm-s2) var(--xm-s4);
+  }
+  /* The navigator scrolls horizontally instead of wrapping, so the sticky
+     header stays ~63px and the page never overflows sideways. */
+  #navigator {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #navigator::-webkit-scrollbar {
+    display: none;
+  }
+  #navList {
+    flex-wrap: nowrap;
+  }
+  /* Do not let the 6 links shrink: otherwise each label word-wraps inside a
+     squeezed column and the navigator grows to ~78px, defeating the one-row
+     toolbar. Non-shrinking items make the list overflow the 390px navigator,
+     which is exactly what #navigator's overflow-x:auto is for. */
+  #navList li {
+    flex: 0 0 auto;
+  }
+  #navList a.menu {
+    white-space: nowrap;
   }
   :root {
-    --xm-fs-display: 26px;
+    --xm-fs-display: 16px;
     --xm-fs-h1: 22px;
     --xm-fs-h2: 19px;
     --xm-fs-h3: 16px;
@@ -1053,36 +1100,58 @@ img {
   color: var(--xm-text-secondary);
 }
 
-#green_channel_favorite,
-#green_channel_digg,
-#green_channel_follow,
-#green_channel_wechat,
-#green_channel_share {
+/* Platform blog-common.min.css wins with:
+     #green_channel #green_channel_digg  [2,0,0] candy background-color
+     #green_channel a                   [1,0,1] gradient image / shadow / radius
+     #green_channel a:link/:visited/:active [1,1,1] !important color + border-*
+   A [2,0,0] descendant selector plus !important on exactly the platform-forced
+   properties is the minimum that wins (see diagnostics/cdp-redesign-css-audit.json).
+   The theme's own .xm-chip, #blog_post_info_block a also matches (the widgets
+   really are inside #blog_post_info_block), so restate every visual property. */
+#green_channel #green_channel_favorite,
+#green_channel #green_channel_digg,
+#green_channel #green_channel_follow,
+#green_channel #green_channel_wechat,
+#green_channel #green_channel_share {
   display: inline-flex;
   align-items: center;
   gap: var(--xm-s2);
   margin: 0 var(--xm-s2) var(--xm-s2) 0;
   padding: var(--xm-s2) var(--xm-s4);
-  border: var(--xm-bw) solid var(--xm-border-strong);
-  border-radius: var(--xm-r-button);
-  background: transparent;
+  background: transparent !important;
+  border: var(--xm-bw) solid var(--xm-border-strong) !important;
+  border-radius: var(--xm-r-button) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: var(--xm-text-secondary) !important;
+  -webkit-text-fill-color: currentColor !important;
   font-family: var(--xm-font-mono);
   font-size: var(--xm-fs-caption);
-  color: var(--xm-text-secondary);
   cursor: pointer;
   transition:
     color var(--xm-dur-fast) var(--xm-ease),
     border-color var(--xm-dur-fast) var(--xm-ease),
     box-shadow var(--xm-dur-fast) var(--xm-ease);
 }
-#green_channel_favorite:hover,
-#green_channel_digg:hover,
-#green_channel_follow:hover,
-#green_channel_wechat:hover,
-#green_channel_share:hover {
-  color: var(--xm-accent-text);
-  border-color: var(--xm-accent);
-  box-shadow: var(--xm-glow-accent);
+#green_channel #green_channel_favorite:hover,
+#green_channel #green_channel_digg:hover,
+#green_channel #green_channel_follow:hover,
+#green_channel #green_channel_wechat:hover,
+#green_channel #green_channel_share:hover {
+  color: var(--xm-accent-text) !important;
+  border-color: var(--xm-accent) !important;
+  box-shadow: var(--xm-glow-accent) !important;
+}
+
+/* Primary action: only "好文要顶" gets the accent treatment; the other three
+   stay neutral. Same [2,0,0] specificity and !important on the platform-forced
+   properties as the shared rule, and declared AFTER it so source order decides
+   in our favour. The generic :hover rule above is [2,1,0] and already supplies
+   accent text/border/glow, so digg keeps its soft fill on hover too. */
+#green_channel #green_channel_digg {
+  background: var(--xm-accent-soft) !important;
+  color: var(--xm-accent-text) !important;
+  border-color: var(--xm-accent) !important;
 }
 
 /* ==========================================================================
@@ -1104,9 +1173,21 @@ img {
   font-size: var(--xm-fs-small);
   font-weight: 600;
   line-height: var(--xm-lh-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--xm-text-secondary);
+  letter-spacing: 0.02em;
+  color: var(--xm-text);
+}
+/* Track rhythm: a 28px cool-blue left segment over the hairline divider,
+   echoing the 132px header track. The existing border-bottom supplies the
+   grey remainder, so no gradient or second pseudo element is needed. */
+.newsItem .catListTitle::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 28px;
+  height: 1px;
+  background: var(--xm-accent);
+  pointer-events: none;
 }
 
 .newsItem ul {
@@ -1694,21 +1775,23 @@ select:focus {
   font-family: var(--xm-font-mono);
   font-size: var(--xm-fs-small);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--xm-text-secondary);
+  letter-spacing: 0.02em;
+  color: var(--xm-text);
 }
 #sidebar_postarchive ul li {
   border-bottom: var(--xm-bw) dashed var(--xm-border);
 }
 
-/* 跨页「轨道站点」标题节点：既有 3px 冷蓝轨 + 8px 暖金节点。
-   left 按实际 DOM 偏移；不新增阴影、不卡片套卡片、不新增 JS 监听。 */
+/* One "track" language everywhere: a 2px cool-blue vertical rail on sidebar
+   headings, matching the nav current-item segment and the post h2 bar.
+   .entrylistTitle already has a 3px cool-blue left border (section 12), so
+   its old 8px warm-gold dot is dropped instead of duplicating the rail. */
 .entrylistTitle,
 .catListTitle {
   position: relative;
 }
 .catListTitle {
-  padding-left: var(--xm-s4);
+  padding-left: var(--xm-s3);
 }
 .entrylistTitle::before,
 .catListTitle::before {
@@ -1716,11 +1799,16 @@ select:focus {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 8px;
-  height: 8px;
-  margin-top: -4px;
-  border-radius: var(--xm-r-chip);
-  background: var(--xm-accent-2);
+}
+.entrylistTitle::before {
+  display: none;
+}
+.catListTitle::before {
+  width: 2px;
+  height: 1em;
+  margin-top: -0.5em;
+  border-radius: 2px;
+  background: var(--xm-accent);
 }
 
 /* ==========================================================================
@@ -1858,12 +1946,12 @@ select:focus {
     transform: translateY(-50%) scale(1);
     transition: none;
   }
-  /* New decorative motion lands on its end state instead of staying invisible. */
-  #blogTitle h1::before,
+  /* Decorative motion lands on its end state instead of staying invisible.
+     Removed orphan selectors: #blogTitle h1::before (node deleted),
+     .entrylistTitle::before (now display:none), .catListTitle::before
+     (static 2px rail, no entrance animation). */
   .day::before,
-  .dayTitle::before,
-  .entrylistTitle::before,
-  .catListTitle::before {
+  .dayTitle::before {
     opacity: 1;
     transform: none;
     transition: none;

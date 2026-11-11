@@ -368,36 +368,58 @@
   color: var(--xm-text-secondary);
 }
 
-#green_channel_favorite,
-#green_channel_digg,
-#green_channel_follow,
-#green_channel_wechat,
-#green_channel_share {
+/* Platform blog-common.min.css wins with:
+     #green_channel #green_channel_digg  [2,0,0] candy background-color
+     #green_channel a                   [1,0,1] gradient image / shadow / radius
+     #green_channel a:link/:visited/:active [1,1,1] !important color + border-*
+   A [2,0,0] descendant selector plus !important on exactly the platform-forced
+   properties is the minimum that wins (see diagnostics/cdp-redesign-css-audit.json).
+   The theme's own .xm-chip, #blog_post_info_block a also matches (the widgets
+   really are inside #blog_post_info_block), so restate every visual property. */
+#green_channel #green_channel_favorite,
+#green_channel #green_channel_digg,
+#green_channel #green_channel_follow,
+#green_channel #green_channel_wechat,
+#green_channel #green_channel_share {
   display: inline-flex;
   align-items: center;
   gap: var(--xm-s2);
   margin: 0 var(--xm-s2) var(--xm-s2) 0;
   padding: var(--xm-s2) var(--xm-s4);
-  border: var(--xm-bw) solid var(--xm-border-strong);
-  border-radius: var(--xm-r-button);
-  background: transparent;
+  background: transparent !important;
+  border: var(--xm-bw) solid var(--xm-border-strong) !important;
+  border-radius: var(--xm-r-button) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: var(--xm-text-secondary) !important;
+  -webkit-text-fill-color: currentColor !important;
   font-family: var(--xm-font-mono);
   font-size: var(--xm-fs-caption);
-  color: var(--xm-text-secondary);
   cursor: pointer;
   transition:
     color var(--xm-dur-fast) var(--xm-ease),
     border-color var(--xm-dur-fast) var(--xm-ease),
     box-shadow var(--xm-dur-fast) var(--xm-ease);
 }
-#green_channel_favorite:hover,
-#green_channel_digg:hover,
-#green_channel_follow:hover,
-#green_channel_wechat:hover,
-#green_channel_share:hover {
-  color: var(--xm-accent-text);
-  border-color: var(--xm-accent);
-  box-shadow: var(--xm-glow-accent);
+#green_channel #green_channel_favorite:hover,
+#green_channel #green_channel_digg:hover,
+#green_channel #green_channel_follow:hover,
+#green_channel #green_channel_wechat:hover,
+#green_channel #green_channel_share:hover {
+  color: var(--xm-accent-text) !important;
+  border-color: var(--xm-accent) !important;
+  box-shadow: var(--xm-glow-accent) !important;
+}
+
+/* Primary action: only "好文要顶" gets the accent treatment; the other three
+   stay neutral. Same [2,0,0] specificity and !important on the platform-forced
+   properties as the shared rule, and declared AFTER it so source order decides
+   in our favour. The generic :hover rule above is [2,1,0] and already supplies
+   accent text/border/glow, so digg keeps its soft fill on hover too. */
+#green_channel #green_channel_digg {
+  background: var(--xm-accent-soft) !important;
+  color: var(--xm-accent-text) !important;
+  border-color: var(--xm-accent) !important;
 }
 
 /* ==========================================================================
@@ -419,9 +441,21 @@
   font-size: var(--xm-fs-small);
   font-weight: 600;
   line-height: var(--xm-lh-small);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--xm-text-secondary);
+  letter-spacing: 0.02em;
+  color: var(--xm-text);
+}
+/* Track rhythm: a 28px cool-blue left segment over the hairline divider,
+   echoing the 132px header track. The existing border-bottom supplies the
+   grey remainder, so no gradient or second pseudo element is needed. */
+.newsItem .catListTitle::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 28px;
+  height: 1px;
+  background: var(--xm-accent);
+  pointer-events: none;
 }
 
 .newsItem ul {
@@ -1009,21 +1043,23 @@ select:focus {
   font-family: var(--xm-font-mono);
   font-size: var(--xm-fs-small);
   font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--xm-text-secondary);
+  letter-spacing: 0.02em;
+  color: var(--xm-text);
 }
 #sidebar_postarchive ul li {
   border-bottom: var(--xm-bw) dashed var(--xm-border);
 }
 
-/* 跨页「轨道站点」标题节点：既有 3px 冷蓝轨 + 8px 暖金节点。
-   left 按实际 DOM 偏移；不新增阴影、不卡片套卡片、不新增 JS 监听。 */
+/* One "track" language everywhere: a 2px cool-blue vertical rail on sidebar
+   headings, matching the nav current-item segment and the post h2 bar.
+   .entrylistTitle already has a 3px cool-blue left border (section 12), so
+   its old 8px warm-gold dot is dropped instead of duplicating the rail. */
 .entrylistTitle,
 .catListTitle {
   position: relative;
 }
 .catListTitle {
-  padding-left: var(--xm-s4);
+  padding-left: var(--xm-s3);
 }
 .entrylistTitle::before,
 .catListTitle::before {
@@ -1031,11 +1067,16 @@ select:focus {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 8px;
-  height: 8px;
-  margin-top: -4px;
-  border-radius: var(--xm-r-chip);
-  background: var(--xm-accent-2);
+}
+.entrylistTitle::before {
+  display: none;
+}
+.catListTitle::before {
+  width: 2px;
+  height: 1em;
+  margin-top: -0.5em;
+  border-radius: 2px;
+  background: var(--xm-accent);
 }
 
 /* ==========================================================================
@@ -1173,12 +1214,12 @@ select:focus {
     transform: translateY(-50%) scale(1);
     transition: none;
   }
-  /* New decorative motion lands on its end state instead of staying invisible. */
-  #blogTitle h1::before,
+  /* Decorative motion lands on its end state instead of staying invisible.
+     Removed orphan selectors: #blogTitle h1::before (node deleted),
+     .entrylistTitle::before (now display:none), .catListTitle::before
+     (static 2px rail, no entrance animation). */
   .day::before,
-  .dayTitle::before,
-  .entrylistTitle::before,
-  .catListTitle::before {
+  .dayTitle::before {
     opacity: 1;
     transform: none;
     transition: none;

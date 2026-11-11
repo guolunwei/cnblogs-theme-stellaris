@@ -24,7 +24,7 @@
 | 代码 | `--xm-code-bg` / `--xm-code-border` | `#0b1118` / `#222d3a` |
 | 效果 | `--xm-selection` / `--xm-shadow-color` / `--xm-glow-color` / `--xm-glow-accent` | `rgba(95,178,255,.26)` / `rgba(0,0,0,.55)` / `rgba(95,178,255,.22)` / 组合值 |
 | 字体 | `--xm-font-sans` / `--xm-font-mono` | 见 §5 |
-| 字级 | `--xm-fs-display…caption` | 34 / 28 / 22 / 17 / 15.5 / 13.5 / 12 px |
+| 字级 | `--xm-fs-display…caption` | 18 / 28 / 22 / 17 / 15.5 / 13.5 / 12 px |
 | 行高 | `--xm-lh-display…caption` | 1.15 / 1.25 / 1.35 / 1.45 / 1.75 / 1.6 / 1.5 |
 | 间距 | `--xm-s1…s18` | 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 56 / 72 px |
 | 圆角 | `--xm-r-card` / `--xm-r-button` / `--xm-r-input` / `--xm-r-chip` / `--xm-r-code` | 12 / 8 / 8 / 999 / 8 px |
@@ -113,7 +113,7 @@
 | 浅色（新） | 13.89 | 6.52 | 5.24 | 6.21 | 5.24 / 4.97 | 4.24 | 5.24 |
 
 门槛：文字 ≥4.5:1、UI 边界 ≥3:1，全部达标。`--xm-border` 1.34:1 属纯装饰发丝线，不设门槛。
-标题渐变三停在 `#f2f6fb` 上分别 16.00 / 4.83 / 5.72:1，末端不会「糊掉」。
+标题改为纯色 `var(--xm-text)`，不再使用文字渐变。删除渐变时必须显式重置 `-webkit-text-fill-color: currentColor`，否则继承的透明填充会让整行标题不可见。
 代码块按 `#0b1118` 固定深色单独自检（见 §2）。
 
 ## 5. 字体与 ≤640px 字号阶梯
@@ -124,7 +124,7 @@
 
 ≤640px 断点（`layout.css`）在 `--xm-fs-display/h1/h2/body` 之外补齐
 `--xm-fs-h3:16px`、`--xm-fs-small:13px`、`--xm-lh-body:1.7`；
-**`--xm-fs-caption` 保持 12px 可读下限**，不下调。
+**`--xm-fs-caption` 保持 12px 可读下限**，不下调。移动端 `--xm-fs-display` 覆写为 16px。
 
 ## 6. `window.XM.accent` 的覆盖边界
 

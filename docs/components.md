@@ -93,16 +93,16 @@
 | 8 | 主题切换 `.xm-fab__btn--theme` | 注入按钮；`aria-describedby` 指向 `#xm-theme-desc`；独立 live 节点 | `dataset.mode`（`auto/dark/light`）；无 `aria-pressed`/`role=switch` | 图标按 mode（非 effectiveMode）取 | 动态 accessible name 描述「点下去会变成什么」；auto 态不加小圆点 | `--xm-accent/-text-secondary/-dur-*` |
 | 9 | 灯箱 `.xm-lightbox` | **原生 `<dialog>`** + `showModal()`；内含可见关闭按钮与 `<img>` | `[open]` 配对显示；`close` 事件统一清理并回焦 `lastTrigger` | 无 showModal 时降级并显式 `aria-modal="false"` | `:modal` 焦点陷阱；裸图 `tabindex=0`/`role=button`/`aria-label`；只处理未被 `<a>` 包裹的图，绝不 `preventDefault` 吞链接；删除 img 内联 `style.cursor` | `--xm-lightbox-scrim/-border-strong/-shadow-popover/-z-toast/-s8` |
 | 10 | 阅读时长 `.xm-readmeta` | 注入 `<div>`，插到正文最前 | 无 | 无 | `aria-hidden="true"`（估算值不播报） | `--xm-font-mono/-fs-caption/-text-muted` |
-| 11 | 导航 `#navList a.menu` | 平台 `a.menu` + `::after` 轨道段 | `.is-current`（JS 按路径匹配） | 无 | 当前项用底部 **2px 轨道段**，不用 4px 星点 | `--xm-accent/-grad-end/-surface-hover/-r-chip/-dur-*` |
-| 12 | 侧栏模块 `.newsItem` | 平台 `.newsItem` + `.catListTitle` + `ul li a::before` 星点 | `li a:hover` 点亮星点并右移 | 无 | 纯装饰；`.catListTitle` 的 8px 暖金站点节点 | `--xm-surface/-border/-accent/-accent-2/-ease-spring` |
+| 11 | 导航 `#navList a.menu` | 平台 `a.menu` + `::after` 轨道段 | `.is-current`（JS 按路径匹配） | 无 | 当前项用底部 **2px 轨道段**，不用 4px 星点；另加 `--xm-accent-soft` 淡底，轨道段位于 `bottom:0` | `--xm-accent/-grad-end/-surface-hover/-r-chip/-dur-*` |
+| 12 | 侧栏模块 `.newsItem` | 平台 `.newsItem` + `.catListTitle` + `ul li a::before` 星点 | `li a:hover` 点亮星点并右移 | 无 | 纯装饰；`.catListTitle` 的 2px 冷蓝竖轨与 28px 冷蓝轨道段 | `--xm-surface/-border/-accent/-ease-spring` |
 | 13 | 标签云 `.catListTag a` / `.xm-chip` | 平台 `a`；等权 chip | `:hover` | 无（**不做权重分级、不用 `:nth-child` 伪造热门**） | 可聚焦链接，语义由平台提供 | `--xm-border-strong/-surface-hover/-r-chip/-fs-caption/-glow-accent` |
 | 14 | 归档 `.entrylist*` | 平台两套结构并列：月归档 `.entrylistItem` / 日归档·首页 `.day > .postTitle` | `:hover` 面（月归档）；标题星点 | 无 | 不卡片套卡片、加阴影 | `--xm-surface-hover/-border/-r-button/-accent-deep/-accent-2` |
 | 15 | 按钮 / 表单 / 评论 / 分页 | 平台 `button, input, textarea, .feedbackItem, #comment_form_container, #nav_next_page a` | `:hover/:focus-visible/:active` | `data-xm-*` 预留 | 统一 `:focus-visible` 焦点环；表单 `:focus` 边框 + 光晕 | `--xm-accent/-border-strong/-r-*/-fs-small/-glow-accent` |
-| 16 | 进度条 / sr-only / 品牌符号 | `.xm-progress`（注入）、`.xm-sr-only`（注入，复用类名）、`#blogTitle h1::before` 8px 暖金点 | 进度条宽度随滚动；品牌节点 no-preference 淡入 | 无 | 进度条 `aria-hidden=true`；sr-only 用于 live 播报；品牌节点 §16 追加 reduced-motion 终态 | `--xm-accent/-grad-end/-z-toast/-accent-2/-dur-slow` |
+| 16 | 进度条 / sr-only / 页头星轨装饰 | `.xm-progress`（注入）、`.xm-sr-only`（注入，复用类名）、`#blogTitle::before/::after` 与 `#header::after` 纯 CSS 冷蓝装饰 | 进度条宽度随滚动；装饰为静态、无动效 | 无 | 进度条 `aria-hidden=true`；sr-only 用于 live 播报；装饰不参与 reduced-motion | `--xm-accent/-grad-end/-z-toast/-accent-2/-dur-slow` |
 
 ### 4.1 值得固化的既有裁决
 
-- 当前项用底部 **2px 轨道段**，不用 4px 星点；侧栏 `.newsItem ul li a::before` 星点保留。
+- 当前项用底部 **2px 轨道段**，不用 4px 星点；侧栏 `.newsItem ul li a::before` 星点保留。当前项另加 `--xm-accent-soft` 淡底，轨道段贴 `bottom:0`。
 - 标签云等权 chip，不做权重分级、不用 `:nth-child` 伪造热门。
 - 归档不卡片套卡片；月归档 `.entrylistItem` 与日归档 `.day > .postTitle` 两套结构并列。
 - 主题切换：图标按 `mode`（非 `effectiveMode`）取，auto 态不加小圆点 / 环，
@@ -132,7 +132,7 @@
 - 四底色对比度：文字 ≥4.5:1、UI 边界 ≥3:1。
 - `keep.css` 的 `*{cursor:var(--xm-cursor,auto)}` 仍在（默认值见 `tokens.css`）；正文 img 无内联 `style.cursor`；
   `#loading` 的 `z-index:99999999` 未变。
-- `XM.accent` 改色后发光跟随、暖金不跟随；reduced-motion 下扫光 / 节点 / 复制按钮终态可见；
+- `XM.accent` 改色后发光跟随、暖金不跟随；reduced-motion 下扫光 / 复制按钮终态可见；
   ≤640px 无横向溢出。
 - **证据边界**：P0 全绿只把「结构化 / 可自动化证据」从 5/10 提到约 8/10；剩余 2 分必须靠
   真机移动端视觉 + 人工读屏（NVDA / VoiceOver）+ 真实读者数据，不得把「断言全绿」写成

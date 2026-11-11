@@ -120,20 +120,10 @@ img {
   height: auto;
 }
 
-/* ---------- 入场：页头轻落，标题下划线从中展开 ---------- */
+/* ---------- 入场：页头轻落 ---------- */
 @media (prefers-reduced-motion: no-preference) {
   #header {
     animation: xm-rise var(--xm-dur-slow) var(--xm-ease) both;
-  }
-  #blogTitle h1::after {
-    content: "";
-    display: block;
-    height: 1px;
-    margin-top: var(--xm-s3);
-    background: linear-gradient(90deg, transparent, var(--xm-accent), transparent);
-    transform: scaleX(0);
-    transform-origin: center;
-    animation: xm-line var(--xm-dur-slow) var(--xm-ease) 140ms both;
   }
 }
 
@@ -141,45 +131,6 @@ img {
   from {
     opacity: 0;
     transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes xm-line {
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/* ---------- 页头品牌节点：复用 h1 下划线末端的 8px 暖金点 ----------
-   不新增独立图形框；品牌原色不跟随 window.XM.accent。仅在 no-preference
-   下淡入，reduced-motion 终态由 components.css §16 兜底。 */
-#blogTitle h1 {
-  position: relative;
-}
-#blogTitle h1::before {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -3.5px; /* 8/2 − 1/2 = 3.5，中心对齐 1px 线 */
-  width: 8px;
-  height: 8px;
-  border-radius: var(--xm-r-chip);
-  background: var(--xm-accent-2);
-  opacity: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  #blogTitle h1::before {
-    animation: xm-node var(--xm-dur-slow) var(--xm-ease) 260ms both;
-  }
-}
-@keyframes xm-node {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
   }
   to {
     opacity: 1;

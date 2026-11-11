@@ -35,7 +35,7 @@
   --xm-accent-contrast: #08131f;    /* 压在主按钮上的文字（深墨，不是白） */
   --xm-accent-soft: rgba(95, 178, 255, 0.14);
   --xm-accent-text: #5fb2ff;        /* 作为文字/链接出现 */
-  --xm-grad-end: #f0c987;           /* 标题渐变终点：暖金 */
+  --xm-grad-end: #f0c987;           /* warm-gold gradient end: card sheen / quote bar / progress */
 
   /* ---------- 代码 ---------- */
   --xm-code-bg: #0b1118;
@@ -77,7 +77,7 @@
     Consolas, "Courier New", "Sarasa Mono SC", "Noto Sans Mono CJK SC",
     "Source Han Mono SC", "PingFang SC", "Microsoft YaHei", monospace;
 
-  --xm-fs-display: 34px;
+  --xm-fs-display: 18px;
   --xm-fs-h1: 28px;
   --xm-fs-h2: 22px;
   --xm-fs-h3: 17px;
