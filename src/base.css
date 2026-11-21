@@ -25,40 +25,20 @@ body {
   overflow-x: hidden;
 }
 
-/* ---------- 星云：两团温度不同的柔光，冷蓝 + 暖金 ---------- */
+/* ---------- 单一顶部光晕：不做纹理、不做网点，画布保持干净 ----------
+   Linear 式做法是把注意力交给排版，背景只留一层极淡的靛蓝，越往下越干净。 */
 body::before {
   content: "";
   position: fixed;
-  inset: -8% -10% auto -10%;
-  height: 70vh;
+  inset: 0 0 auto 0;
+  height: 460px;
   z-index: var(--xm-z-base);
   pointer-events: none;
-  background:
-    radial-gradient(40% 55% at 16% 0%, var(--xm-glow-color) 0%, transparent 70%),
-    radial-gradient(34% 48% at 76% 6%, var(--xm-ambient-warm) 0%, transparent 72%);
-  filter: blur(30px);
-  opacity: 0.8;
-}
-
-/* ---------- 星点：极淡细颗粒，压住渐变的塑料感 ---------- */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: var(--xm-z-base);
-  pointer-events: none;
-  opacity: 0.7;
-  background-image: radial-gradient(var(--xm-star-dot) 1px, transparent 1px);
-  background-size: 3px 3px;
-}
-
-html[data-theme="light"] body::after {
-  background-image: radial-gradient(var(--xm-star-dot-light) 1px, transparent 1px);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) body::after {
-    background-image: radial-gradient(var(--xm-star-dot-light) 1px, transparent 1px);
-  }
+  background: radial-gradient(
+    58% 100% at 50% -18%,
+    var(--xm-glow-color) 0%,
+    transparent 72%
+  );
 }
 
 /* ---------- 选中 ---------- */

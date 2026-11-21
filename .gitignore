@@ -14,6 +14,9 @@ dist/.preview/
 .vscode/
 .idea/
 
+# Snapshot of what was live on cnblogs before a redeploy; local rollback material only.
+.backup-online/
+
 # examples/ previews are captured live-blog snapshots with personal data; never commit.
 # examples/mkpreview.js is the clean, reproducible generator and stays tracked.
 examples/*.html

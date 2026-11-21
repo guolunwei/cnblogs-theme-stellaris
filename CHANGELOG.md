@@ -4,17 +4,17 @@
 
 ## [Unreleased]
 
-### 变更
-- 页头重做为约 63px 单行工具条：`#header` 改 flex，`#blogTitle` 与 `#navigator` 同行，空 `h2` 与 `.blogStats` 默认隐藏；`--xm-fs-display` 由 34px 收为 18px（移动端 16px）；移动端 `#header` 不换行、`#navigator` 横向滚动。
-- 删除标题三色渐变，改纯色 `var(--xm-text)`，并显式重置 `-webkit-text-fill-color: currentColor`，避免继承的透明填充让整行标题不可见。
-- 删除 `base.css` 的 `#blogTitle h1::before` 8px 暖金点与 `@keyframes xm-node`；侧栏 `.catListTitle::before` 改 2px 冷蓝竖轨、新增 `::after` 28px 冷蓝轨道段，`.entrylistTitle::before` 改为 `display:none`。
-- 新增纯冷蓝页头星轨装饰：`#header::after` 132px 轨道线、`#blogTitle::before` 12px 四分之一圆弧、`#blogTitle::after` 4px 星点；当前导航项加 `--xm-accent-soft` 淡底，轨道段位于 `bottom:0`。
-- 底部四个 `#green_channel_*` 按钮统一为中性细边框胶囊，`digg` 作冷蓝主操作底。
-- tagline 取自后台「博客子标题」字段（`#blogTitle h2:not(:empty)`），不硬编码品牌名，不新增 `window.XM.tagline`。
-- 范围边界：`--xm-grad-end` 暖金未删，仍用于卡片扫光 / 引用竖条 / 进度条；「冷蓝管技术、暖金管人」的色彩分工不变。
-
-### 计划中
-- 将 `tests/` 下的诊断脚本改为统一读取 `XM_CHROME` 环境变量，进一步去掉内置默认路径。
+### 变更 —— 视觉方向重制（Linear 式工程极简）
+- 设计令牌整体重算：画布 `#08090a`、表面 `#0f1011`、发丝线 `#1c1e21`、文字 `#f7f8f8 / #b4bcc6 / #8a8f98`；强调色收敛为单一靛蓝 `#8b93ff`（浅色 `#5e6ad2`）。取消冷蓝/暖金双色分工，删除全部渐变、发光与卡片投影（`--xm-shadow-card` 归零）。
+- 布局：页头收为 56px 吸顶工具条；`--xm-sidebar-w` 300→264；卡片圆角 12→10、按钮与输入 8→6；正文 15px/1.75；页脚上边距 72→56。
+- 首页卡片去特效：删除顶部扫光、左侧竖条、hover 位移与阴影，只保留描边提亮；摘要 3 行→2 行；新增 `.xm-more` 行「阅读全文 →」，不再被 `-webkit-line-clamp` 裁掉。
+- 侧栏由「卡片 + 裸列表」混排改为统一发丝线分区，标题统一为等宽 11px 小标签；日历重排（今日 pill、周末弱化、行高收紧）；搜索框补 placeholder，输入框与按钮同一行。
+- 文章页拍平 `#topics > #cnblogs_post_body` 双层卡片；表格改横线制；引用块改 2px 竖线 + 浅底；代码块 mac 三点改中性灰并补回被 `pre code { padding: 0 }` 清零的 `padding-top`；AIGC 标识压成 15px 灰度。
+- 新增 `enhance.js` 文本整理（`features.metaText`，默认开）：去掉 `posted @` 与括号计数、`2026年11月9日`→`2026.11.09`、摘要前缀「摘要：」、把「阅读全文」移出摘要、清理空侧栏模块、补搜索 placeholder、给表格套横向滚动容器、整理作者卡与列表元信息。
+- 深浅两态对比度复算（四级底色取最差值）：正文 16.73 / 17.95、次要 9.28 / 8.69、弱文字 5.48 / 4.48、链接 6.54 / 5.75、UI 边界 3.58 / 4.48、主按钮 4.70 / 6.38，全部达标。
+- 清理重制后的死令牌：删除 `--xm-grad-end`、`--xm-shadow-color`、`--xm-shadow-card-hover`、`--xm-star-dot`、`--xm-star-dot-light`、`--xm-ambient-warm`、`--xm-z-nav`、`--xm-ease-spring`；新增 `--xm-code-dot-1/2/3` 承接代码块 mac 三点，语义层色值字面量归零。
+- 品牌图形同步改单色系：favicon（`build.js` 模板常量）、`docs/assets/stellaris-mark.svg`、`docs/assets/og-cover.svg` 去掉星芒与暖金节点，改为「轨道环 + 中心节点」的靛蓝两级灰阶。
+- 文档与实现对齐：重写 `docs/visual-spec.md`（Linear 方向规范，含删除清单）、`docs/tokens.md`（实测对比度 + 令牌自检口径）；修正 `docs/components.md` 中对已删元素（2px 轨道段、星点、`warm` 色调）的描述，并如实标注 `data-xm-variant/size/tone/density` 尚未被消费。
 
 ## [0.3.0] - 2026-11-09（未发布）
 

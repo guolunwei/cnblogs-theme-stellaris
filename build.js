@@ -80,8 +80,9 @@ const js = JS_ORDER.map((f) => {
 
 /* Favicon is a data URI (transparent background, zero external requests) and
    lives in this template constant so every rebuild keeps it. Brand-level color
-   changes must be synced in three places: the SVG file, this URI, og-cover. */
-const spinner = `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cellipse cx='12' cy='12' rx='10' ry='4.5' transform='rotate(-32 12 12)' fill='none' stroke='%235FB2FF' stroke-width='1.6'/%3E%3Cpath d='M12 7.2 L13.4 10.6 L16.8 12 L13.4 13.4 L12 16.8 L10.6 13.4 L7.2 12 L10.6 10.6 Z' fill='%235FB2FF'/%3E%3Ccircle cx='20.5' cy='6.7' r='1.9' fill='%23F0C987'/%3E%3C/svg%3E">
+   changes must be synced in three places: the SVG file, this URI, og-cover.
+   Mark = orbit ring + centre node, single indigo family, no star burst. */
+const spinner = `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cellipse cx='12' cy='12' rx='10' ry='4.6' transform='rotate(-32 12 12)' fill='none' stroke='%235E6AD2' stroke-width='1.7'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%238B93FF'/%3E%3C/svg%3E">
 <div id="loading">
     <div class="spinner-box">
         <div class="blue-orbit leo"></div>

@@ -40,6 +40,30 @@ XM_SELECTORS = {
 - `table.hljs-ln`：由前端高亮脚本**运行时生成**，初始化时可能还不存在——`pick()` 每次现查，
   不缓存、不预置，脚本生成后再取即可得到节点。
 
+### 当前键表（`simplememory` 组）
+
+| 键 | 消费方 | 用途 |
+|---|---|---|
+| `postBody` / `header` / `sideBar` / `mainContent` | 多处 | 骨架根节点 |
+| `navMenuLinks` | `initNav` | 导航当前项 |
+| `blogLogo` / `blogLogoLink` | `initLogo` | 头像挂载点（占位 1×1 gif 条件隐藏） |
+| `tagCloud` / `tagList` | `initTags` | 标签云 |
+| `archiveMonthItems` / `archiveDayTitles` | 归档页 | 两套结构并列，各带候选 |
+| `postMeta` | `initMetaText` | 列表/归档元信息文本规整（去 `posted @`、括号计数、日期格式） |
+| `postDateLink` | `initMetaText` | 日期链接（保留可点，只改文本形态） |
+| `excerptDesc` | `initMetaText` | 摘要容器（截断 2 行） |
+| `readMoreLink` | `initMetaText` | 「阅读全文」原链接，克隆为 `.xm-more` 移出被截断区域 |
+| `sidebarBlocks` | `initSidebarClean` | 侧栏模块（空模块加 `.xm-empty` 隐藏） |
+| `postDays` | `initReadingTime` | 列表页文章卡；命中则把「· N 分钟」追加进 `.dayTitle` |
+| `hljsLineTable` | 行号 | 原生行号表，与自实现 `.xm-code-ln` 互斥 |
+| `codeBlocks` | `initCopy` | 代码块 |
+| `tocButton` / `loading` | TOC / 加载层 | 平台自带节点 |
+
+`fallback` 组为跨皮肤兜底，**不保证每个键都有对应项**：例如 `postDays` 只有 `simplememory` 组有，
+在其它骨架上 `pick("postDays")` 返回 `null`，`initReadingTime` 会改走文章页单块渲染路径——
+这是有意的降级，不是遗漏（`article` 这类通用选择器不能当 `postDays` 候选，否则会把每篇文章当成
+一个「日期卡」，把阅读时长重复写进标题）。
+
 ## pick(key)
 
 - 逐个候选执行 `try { document.querySelector(s) } catch (e) { continue }`，返回首个命中的节点，

@@ -69,6 +69,14 @@ window.XM = {
       tagCloud:          [".catListTag", "#sidebar_tag", ".tag-cloud", "#tagCloud"],
       archiveMonthItems: [".entrylistItem", ".entrylistItemPostCon", ".post-list-item"],
       archiveDayTitles:  [".day > .postTitle", ".day .postTitle", ".postTitle"],
+      /* List-page meta cleanup: platform strings ("posted @", "阅读(12)") and
+         the read-more link trapped inside the clamped excerpt. */
+      postMeta:          [".day .postDesc", ".postDesc", ".entrylistItemPostDesc"],
+      postDateLink:      [".day .dayTitle a", ".entrylistItem a[title='permalink']"],
+      excerptDesc:       [".c_b_p_desc"],
+      readMoreLink:      [".c_b_p_desc_readmore"],
+      sidebarBlocks:     ["#sideBarMain .sidebar-block", "#sideBarMain #sidebar_categories"],
+      postDays:          [".day"],
       hljsLineTable:     ["table.hljs-ln", ".hljs-ln"],
       tocButton:         [".cnblogs-toc-button", ".toc-button"],
       /* Root-level nodes that enhance.js used to hard-code via getElementById /
@@ -88,6 +96,11 @@ window.XM = {
       tagCloud:          [".tags", ".tagcloud", ".widget_tag_cloud"],
       archiveMonthItems: [".archive-item", ".post-list-item", ".entry-list > li"],
       archiveDayTitles:  [".post-title", "h2.postTitle", ".entry-title"],
+      postMeta:          [".post-meta", ".post-info", ".postDesc"],
+      postDateLink:      [".post-date a", "time a"],
+      excerptDesc:       [".excerpt", ".summary", ".c_b_p_desc"],
+      readMoreLink:      [".read-more", ".more-link"],
+      sidebarBlocks:     ["aside .widget", ".sidebar .widget", "#sidebar .widget"],
       hljsLineTable:     ["table.hljs-ln"],
       tocButton:         [".toc-toggle", ".toc-button"],
       /* Keep code-copy usable on skins without the SimpleMemory containers. */
@@ -241,7 +254,7 @@ window.XM = {
   function isPlainObject(v) {
     return v !== null && typeof v === "object" && !Array.isArray(v);
   }
-  var FEATURE_KEYS = ["toc", "copy", "lineNumbers", "lightbox", "readingTime", "progress"];
+  var FEATURE_KEYS = ["toc", "copy", "lineNumbers", "lightbox", "readingTime", "progress", "metaText"];
 
   /* The value is embedded in url("...") via setProperty; reject anything that
      could close the string or inject a new CSS declaration/rule. */
@@ -1187,17 +1200,158 @@ window.XM = {
       });
     }
 
-    /* --- 阅读时长：中文按字数、英文按词数估算 --- */
-    function initReadingTime() {
-      if (!cfg.features.readingTime || !postBody) return;
-      var raw = postBody.innerText || postBody.textContent || "";
+    /* --- 列表元信息：把平台的 "posted @ / 阅读(12)" 收成排版语言 ---
+       只改文本节点与链接位置，不动平台注入的任何 id/class，失败也不影响渲染。 */
+    function initMetaText() {
+      if (!cfg.features.metaText) return;
+      var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+
+      /* 1) "posted @ 2026-11-09 17:16 作者 阅读(30) 评论(0) 推荐(0)"
+            -> "2026-11-09 17:16 作者 阅读 30 评论 0 推荐 0" */
+      /* 计数在 <span class="post-view-count"> 里，是后代文本节点，
+         必须用 TreeWalker 遍历，不能只看直接子节点。 */
+      Array.prototype.forEach.call(pickAll("postMeta"), function (node) {
+        if (!node || !document.createTreeWalker) return;
+        var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
+        var texts = [], t;
+        while ((t = walker.nextNode())) texts.push(t);
+        Array.prototype.forEach.call(texts, function (tn) {
+          var before = tn.nodeValue;
+          var after = before
+            .replace(/posted\s*@\s*/gi, "")
+            .replace(/(阅读|评论|推荐)\s*[（(]\s*(\d+)\s*[)）]/g, "$1 $2")
+            .replace(/\s{2,}/g, " ")
+            .replace(/\s+(阅读\s+\d+)/, " · $1")
+            .replace(/(\d+)\s+(评论|推荐)/g, "$1 · $2");
+          if (after !== before) tn.nodeValue = after;
+        });
+      });
+
+      /* 1b) 文章底部是 "阅读(" + <span>55</span> + ")"，括号被拆到文本节点里 */
+      Array.prototype.forEach.call(
+        document.querySelectorAll("#post_view_count, #post_comment_count"),
+        function (count) {
+          var prev = count.previousSibling;
+          var next = count.nextSibling;
+          if (prev && prev.nodeType === 3) {
+            var label = prev.nodeValue.replace(/[（(]\s*$/, "").replace(/\u00a0/g, " ").trim();
+            prev.nodeValue = " · " + label + " ";
+          }
+          if (next && next.nodeType === 3) next.nodeValue = next.nodeValue.replace(/^\s*[)）]/, " ");
+        }
+      );
+
+      /* 2) 2026年11月9日 -> 2026.11.09（等宽栏位对齐，不再折行） */
+      Array.prototype.forEach.call(pickAll("postDateLink"), function (a) {
+        var before = a.textContent;
+        var after = before.replace(/(\d{4})年(\d{1,2})月(\d{1,2})日/, function (_, y, m, d) {
+          return y + "." + pad(+m) + "." + pad(+d);
+        });
+        if (after !== before) a.textContent = after;
+      });
+
+      /* 3) 摘要前的 "摘要：" 是平台标签，主题里用排版区分即可 */
+      Array.prototype.forEach.call(pickAll("excerptDesc"), function (desc) {
+        var first = desc.firstChild;
+        if (!first || first.nodeType !== 3) return;
+        first.nodeValue = first.nodeValue.replace(/^\s*摘要：\s*/, "");
+      });
+
+      /* 4) 「阅读全文」原本粘在被 -webkit-line-clamp 截断的摘要里，会被裁掉；
+            移到摘要块之后单独成行，点击区域也更大。 */
+      Array.prototype.forEach.call(pickAll("readMoreLink"), function (a) {
+        var holder = a.parentNode;
+        if (!holder || !holder.parentNode) return;
+        var link = a.cloneNode(false);
+        link.className = "xm-more";
+        link.textContent = "阅读全文";
+        var arrow = document.createElement("span");
+        arrow.setAttribute("aria-hidden", "true");
+        arrow.textContent = " →";
+        link.appendChild(arrow);
+        holder.parentNode.insertBefore(link, holder.nextSibling);
+        holder.removeChild(a);
+      });
+    }
+
+    /* --- 表格横向滚动：窄屏不把三列挤成豆腐块 --- */
+    function initTableScroll() {
+      if (!postBody) return;
+      var tables = postBody.querySelectorAll("table");
+      Array.prototype.forEach.call(tables, function (table) {
+        if (table.closest("pre")) return; /* 代码行号表格不参与 */
+        var host = table.parentNode;
+        if (!host || (host.classList && host.classList.contains("xm-table-wrap"))) return;
+        var wrap = el("div", "xm-table-wrap");
+        host.insertBefore(wrap, table);
+        wrap.appendChild(table);
+      });
+    }
+
+    /* --- 侧栏结构整理：平台会渲染出没有内容的模块，留着就是一整段空白 ---
+       只加 class 隐藏，不删节点；若平台稍后再填充内容，1.8s 后自动放行。 */
+    function initSidebarClean() {
+      var blocks = pickAll("sidebarBlocks");
+      var q = document.getElementById("q");
+      if (q && !q.getAttribute("placeholder")) q.setAttribute("placeholder", "搜索文章…");
+
+      /* "积分 -  5233" 这种平台文案收成 "积分 5233" */
+      Array.prototype.forEach.call(document.querySelectorAll(".liScore, .liRank"), function (li) {
+        var t = (li.textContent || "").replace(/\s+/g, " ").replace(/\s*-\s*/g, " ").trim();
+        if (t && t !== li.textContent) li.textContent = t;
+      });
+
+      function mark(block) {
+        var hasText = (block.textContent || "").replace(/\s+/g, "") !== "";
+        var hasMedia = !!block.querySelector("input, img, canvas, iframe, svg");
+        if (!hasText && !hasMedia) block.classList.add("xm-empty");
+        else block.classList.remove("xm-empty");
+      }
+      Array.prototype.forEach.call(blocks, mark);
+      if (blocks.length) {
+        setTimeout(function () {
+          Array.prototype.forEach.call(blocks, mark);
+        }, 1800);
+      }
+    }
+
+    /* --- 阅读时长：中文按字数、英文按词数估算 ---
+       列表页塞进日期行（"2026.11.09 · 4 分钟"），文章页放在正文开头。 */
+    function readingMinutes(raw) {
       var cn = (raw.match(/[一-龥]/g) || []).length;
       var en = (raw.replace(/[一-龥]/g, " ").match(/[A-Za-z0-9]+/g) || []).length;
-      var minutes = Math.max(1, Math.round((cn + en * 6) / 320));
+      return Math.max(1, Math.round((cn + en * 6) / 320));
+    }
+
+    function initReadingTime() {
+      if (!cfg.features.readingTime) return;
+
+      var days = pickAll("postDays");
+      if (days.length) {
+        Array.prototype.forEach.call(days, function (day) {
+          if (!day || day.querySelector(".xm-readmeta--inline")) return;
+          var stage = day.querySelector(".c_b_p_desc") || day;
+          var minutes = readingMinutes(stage.innerText || stage.textContent || "");
+          var host = day.querySelector(".dayTitle") || day;
+          var tag = el("span", "xm-readmeta xm-readmeta--inline");
+          tag.setAttribute("aria-hidden", "true");
+          tag.textContent = " · " + minutes + " 分钟";
+          host.appendChild(tag);
+        });
+        return;
+      }
+
+      if (!postBody) return;
       var meta = el("div", "xm-readmeta");
       meta.setAttribute("aria-hidden", "true");
-      meta.textContent = "约 " + minutes + " 分钟阅读";
-      postBody.insertBefore(meta, postBody.firstChild);
+      meta.textContent = "约 " + readingMinutes(postBody.innerText || postBody.textContent || "") + " 分钟阅读";
+      /* 文章页：放在标题与分隔线之后、正文之前，别让正文第一行变成元信息 */
+      var host = postBody.parentNode;
+      if (host && host.classList && host.classList.contains("postBody")) {
+        host.parentNode.insertBefore(meta, host);
+      } else {
+        postBody.insertBefore(meta, postBody.firstChild);
+      }
     }
 
     /* --- window.XM.logo：内存预加载，成功才改 DOM；失败完全不干预、静默回退 --- */
@@ -1325,6 +1479,9 @@ window.XM = {
     guard("line-numbers", initLineNumbers);
     guard("lightbox", initLightbox);
     guard("reading-time", initReadingTime);
+    guard("meta-text", initMetaText);
+    guard("table-scroll", initTableScroll);
+    guard("sidebar-clean", initSidebarClean);
     guard("logo", initLogo);
     guard("skip-link", initSkipLink);
     guard("escape", initEscape);

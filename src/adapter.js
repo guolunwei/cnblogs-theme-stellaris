@@ -23,6 +23,14 @@
       tagCloud:          [".catListTag", "#sidebar_tag", ".tag-cloud", "#tagCloud"],
       archiveMonthItems: [".entrylistItem", ".entrylistItemPostCon", ".post-list-item"],
       archiveDayTitles:  [".day > .postTitle", ".day .postTitle", ".postTitle"],
+      /* List-page meta cleanup: platform strings ("posted @", "阅读(12)") and
+         the read-more link trapped inside the clamped excerpt. */
+      postMeta:          [".day .postDesc", ".postDesc", ".entrylistItemPostDesc"],
+      postDateLink:      [".day .dayTitle a", ".entrylistItem a[title='permalink']"],
+      excerptDesc:       [".c_b_p_desc"],
+      readMoreLink:      [".c_b_p_desc_readmore"],
+      sidebarBlocks:     ["#sideBarMain .sidebar-block", "#sideBarMain #sidebar_categories"],
+      postDays:          [".day"],
       hljsLineTable:     ["table.hljs-ln", ".hljs-ln"],
       tocButton:         [".cnblogs-toc-button", ".toc-button"],
       /* Root-level nodes that enhance.js used to hard-code via getElementById /
@@ -42,6 +50,11 @@
       tagCloud:          [".tags", ".tagcloud", ".widget_tag_cloud"],
       archiveMonthItems: [".archive-item", ".post-list-item", ".entry-list > li"],
       archiveDayTitles:  [".post-title", "h2.postTitle", ".entry-title"],
+      postMeta:          [".post-meta", ".post-info", ".postDesc"],
+      postDateLink:      [".post-date a", "time a"],
+      excerptDesc:       [".excerpt", ".summary", ".c_b_p_desc"],
+      readMoreLink:      [".read-more", ".more-link"],
+      sidebarBlocks:     ["aside .widget", ".sidebar .widget", "#sidebar .widget"],
       hljsLineTable:     ["table.hljs-ln"],
       tocButton:         [".toc-toggle", ".toc-button"],
       /* Keep code-copy usable on skins without the SimpleMemory containers. */

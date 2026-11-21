@@ -33,7 +33,7 @@
 <script>
 window.XM = {
   theme: "auto",   // "auto" 跟随系统 | "dark" 常驻深色 | "light" 常驻浅色
-  accent: null,    // 例："#FF7A59"，留 null 用默认冷蓝
+  accent: null,    // 例："#FF7A59"，留 null 用默认靛蓝 #8b93ff（浅色套 #5e6ad2）
   logo: null,      // 例："https://.../avatar.png"，留 null 用平台默认（占位图隐藏）
   analyticsId: null,   // 百度统计 ID；留 null 完全不加载
   cursorEffects: "https://blog-static.cnblogs.com/files/home/cursor-effects.js", // 换博客请替换或置 null
@@ -74,7 +74,9 @@ window.XM = {
 
 - `theme`：只有 `"auto" / "dark" / "light"` 合法；其它值（含 `null`、数字、拼错的字符串）
   等同未设置，回落 `"auto"`。
-- `accent`：非十六进制字符串在解析时回落到默认冷蓝，不会写入坏掉的 CSS 变量。
+- `accent`：非十六进制字符串在解析时回落到默认靛蓝，不会写入坏掉的 CSS 变量。
+  只写 `--xm-accent / --xm-accent-text / --xm-accent-soft / --xm-glow-color` 四项，
+  不会连带改掉 `--xm-accent-deep`（主按钮底色，需自证 4.5:1）与 `--xm-accent-2`（同色浅阶）。
 - `logo`：非字符串、空串、非法 URL、非 http/https/data 协议、或图片加载失败/超时，
   一律静默回退平台默认头像，不改动 DOM、不抛错（参考 `initLogo` 的独立 try/catch）。
 - `selectors`：非法选择器字符串被 try/catch 丢弃并回落默认候选（见 `docs/adapter.md`）。

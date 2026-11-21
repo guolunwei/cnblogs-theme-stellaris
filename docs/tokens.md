@@ -11,112 +11,136 @@
 - **轻量换肤**：改页脚 `window.XM.accent`（主色）、`theme`（三态）、`logo`（头像），保存即生效，
   不用重新构建、不用重贴 CSS。见 `docs/configuration.md`。
 
-## 1. 深色 `:root`（默认形态）
+## 1. 视觉方向：Linear 式工程极简
+
+令牌的每一项都为这个方向服务，不是随手取的色板：
+
+| 特征 | 落地方式 |
+|---|---|
+| 近黑画布 | `--xm-bg: #08090a`，比正文文字暗 18.7:1，让内容成为唯一的亮面 |
+| 1px 发丝线分区 | `--xm-border: #1c1e21`（装饰，不设对比度门槛），**取代阴影与卡片浮起** |
+| 零阴影 | `--xm-shadow-card: none`，卡片靠描边与间距分层，hover 只换描边亮度 |
+| 靛蓝单点强调 | 只有 `--xm-accent: #8b93ff` 一个彩色锚点，全站不出现第二种强调色 |
+| 紧凑字阶 | `--xm-fs-body: 15px`、`--xm-fs-caption: 11.5px`，接近产品型官网而非阅读型博客 |
+| 克制动效 | `--xm-dur-fast: 140ms`，只做描边/透明度过渡，不做位移与缩放 |
+
+## 2. 深色 `:root`（默认形态）
 
 | 类别 | 变量 | 值 |
 |---|---|---|
-| 画布 | `--xm-bg` / `--xm-bg-elevated` | `#0f151d` / `#141c25` |
-| 表面 | `--xm-surface` / `--xm-surface-hover` | `#18212c` / `#1f2a36` |
-| 发丝线 | `--xm-border` / `--xm-border-strong` | `#26313e` / `#74869f` |
-| 文字 | `--xm-text` / `--xm-text-secondary` / `--xm-text-muted` | `#e7eef7` / `#a9b8ca` / `#8b9bb0` |
-| 强调 | `--xm-accent` / `--xm-accent-2` / `--xm-accent-deep` / `--xm-accent-contrast` | `#5fb2ff` / `#f0c987` / `#1f6fd0` / `#08131f` |
-| 强调派生 | `--xm-accent-soft` / `--xm-accent-text` / `--xm-grad-end` | `rgba(95,178,255,.14)` / `#5fb2ff` / `#f0c987` |
-| 代码 | `--xm-code-bg` / `--xm-code-border` | `#0b1118` / `#222d3a` |
-| 效果 | `--xm-selection` / `--xm-shadow-color` / `--xm-glow-color` / `--xm-glow-accent` | `rgba(95,178,255,.26)` / `rgba(0,0,0,.55)` / `rgba(95,178,255,.22)` / 组合值 |
-| 字体 | `--xm-font-sans` / `--xm-font-mono` | 见 §5 |
-| 字级 | `--xm-fs-display…caption` | 18 / 28 / 22 / 17 / 15.5 / 13.5 / 12 px |
-| 行高 | `--xm-lh-display…caption` | 1.15 / 1.25 / 1.35 / 1.45 / 1.75 / 1.6 / 1.5 |
+| 画布 | `--xm-bg` / `--xm-bg-elevated` | `#08090a` / `#0f1011` |
+| 表面 | `--xm-surface` / `--xm-surface-hover` | `#0f1011` / `#16181a` |
+| 发丝线 | `--xm-border` / `--xm-border-strong` | `#1c1e21` / `#6b7079` |
+| 文字 | `--xm-text` / `--xm-text-secondary` / `--xm-text-muted` | `#f7f8f8` / `#b4bcc6` / `#8a8f98` |
+| 强调 | `--xm-accent` / `--xm-accent-2` / `--xm-accent-deep` / `--xm-accent-contrast` | `#8b93ff` / `#c7cbff` / `#5e6ad2` / `#ffffff` |
+| 强调派生 | `--xm-accent-soft` / `--xm-accent-text` | `rgba(94,106,210,.16)` / `#8b93ff` |
+| 代码 | `--xm-code-bg` / `--xm-code-border` | `#0b0c0d` / `#1c1e21` |
+| 效果 | `--xm-selection` / `--xm-glow-color` | `rgba(94,106,210,.3)` / `rgba(94,106,210,.1)` |
+| 阴影/发光 | `--xm-shadow-card` / `--xm-glow-accent` | 全部 `none`（方向性禁用，不是遗漏） |
+| 字级 | `--xm-fs-display…caption` | 16 / 26 / 21 / 16.5 / 15 / 13.5 / 11.5 px |
+| 行高 | `--xm-lh-display…caption` | 1.2 / 1.32 / 1.4 / 1.5 / 1.75 / 1.6 / 1.5 |
 | 间距 | `--xm-s1…s18` | 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 56 / 72 px |
-| 圆角 | `--xm-r-card` / `--xm-r-button` / `--xm-r-input` / `--xm-r-chip` / `--xm-r-code` | 12 / 8 / 8 / 999 / 8 px |
+| 圆角 | `--xm-r-card` / `--xm-r-button` / `--xm-r-input` / `--xm-r-chip` / `--xm-r-code` | 10 / 6 / 6 / 999 / 8 px |
 | 描边 | `--xm-bw` / `--xm-bw-focus` | 1 / 2 px |
-| 动效 | `--xm-dur-fast` / `--xm-dur` / `--xm-dur-slow` / `--xm-ease` / `--xm-ease-spring` | 160 / 220 / 380 ms + 两条 cubic-bezier |
-| 层级 | `--xm-z-base…xm-z-fab` | 0 / 20 / 50 / 100 / 1000 / 1100 |
+| 动效 | `--xm-dur-fast` / `--xm-dur` / `--xm-dur-slow` / `--xm-ease` | 140 / 180 / 260 ms + 一条 cubic-bezier |
+| 层级 | `--xm-z-base…xm-z-fab` | 0 / 20 / 100 / 1000 / 1100 |
 | 断点 | `--xm-bp-sm…xl` | 640 / 900 / 1200 / 1440 px（媒体条件本身硬编码，不支持 `var()`） |
-| 布局 | `--xm-page-w` / `--xm-sidebar-w` | 1180 / 300 px |
+| 布局 | `--xm-page-w` / `--xm-sidebar-w` | 1180 / 264 px |
 
-> `--xm-content-w:760px` 已删除：宽度由 `--xm-page-w − --xm-sidebar-w` 与 grid 决定，
-> 一个「改了没反应」的变量正是本批要清除的同类破口。
+> **已删除的死令牌**（重制后零消费，按「不留改了没反应的变量」原则清掉）：
+> `--xm-content-w`、`--xm-grad-end`、`--xm-shadow-color`、`--xm-shadow-card-hover`、
+> `--xm-star-dot`、`--xm-star-dot-light`、`--xm-ambient-warm`、`--xm-z-nav`、`--xm-ease-spring`。
+> 其中 `star-dot*` 与 `ambient-warm` 是删掉网纹/双色星云后的残留，`grad-end` 是收敛单色强调后的残留。
+>
+> 标题不再使用文字渐变，CSS 中出现的 `-webkit-text-fill-color: currentColor` 是删除渐变后的显式复位，
+> 否则继承的透明填充会让整行标题不可见。
 
-## 2. 第二批新增的 12 个 token（只 `:root` 定义一次）
+## 3. 代码块与灯箱常量（只 `:root` 定义一次）
 
 | token | 值 | 用途 |
 |---|---|---|
-| `--xm-ambient-warm` | `rgba(240,201,135,.13)` | `body::before` 暖金柔光；**允许**浅色两套覆写为 `.09` |
-| `--xm-star-dot` | `rgba(255,255,255,.07)` | 深色星点（由 `base.css` 引用） |
-| `--xm-star-dot-light` | `rgba(22,32,43,.075)` | 浅色星点（由 `base.css` 引用） |
-| `--xm-code-block-bg` | `#0b1118` | 代码块底色（跨模式常量） |
+| `--xm-code-block-bg` | `#0b0c0d` | 代码块底色（跨模式常量） |
 | `--xm-code-block-fg` | `#dce6f2` | 代码块前景（跨模式常量） |
-| `--xm-code-ln-fg` | `rgba(139,155,176,.72)` | 行号槽 / hljs 行号列（跨模式常量） |
-| `--xm-code-copy-bg` | `rgba(11,17,24,.72)` | 复制按钮底（跨模式常量） |
-| `--xm-code-copy-border` | `rgba(116,134,159,.45)` | 复制按钮边（跨模式常量） |
+| `--xm-code-ln-fg` | `rgba(139,143,152,.8)` | 行号槽 / hljs 行号列（跨模式常量） |
+| `--xm-code-copy-bg` | `rgba(11,12,13,.85)` | 复制按钮底（跨模式常量） |
+| `--xm-code-copy-border` | `rgba(107,112,121,.45)` | 复制按钮边（跨模式常量） |
 | `--xm-code-copy-fg` | `#cdd9e8` | 复制按钮字（跨模式常量） |
 | `--xm-code-copy-done` | `#7ee0a6` | 复制成功字（跨模式常量） |
 | `--xm-code-copy-done-border` | `rgba(126,224,166,.6)` | 复制成功边（跨模式常量） |
-| `--xm-lightbox-scrim` | `rgba(6,10,15,.86)` | 灯箱遮罩（跨模式常量） |
+| `--xm-code-dot-1/2/3` | `#3d434b` / `#4b525b` / `#5a626c` | 代码块 mac 三点（三档中性灰，**不用红黄绿**） |
+| `--xm-lightbox-scrim` | `rgba(5,6,7,.9)` | 灯箱遮罩（跨模式常量） |
 
-**跨模式常量规则**：`code-block / code-copy / code-ln-fg / lightbox-scrim` 只 `:root` 一次定义，
+**跨模式常量规则**：`code-block / code-copy / code-ln-fg / code-dot / lightbox-scrim` 只 `:root` 一次定义，
 **两套浅色覆写块禁止重新定义**。原因：代码块在浅色模式下仍固定深色（`components.css` 既定意图），
-若在浅色块覆写会把代码区刷白、对比度崩塌。`#dce6f2` on `#0b1118` = 15.03:1、
-`#cdd9e8` = 13.26:1、`#7ee0a6` = 11.83:1，均达标。
+若在浅色块覆写会把代码区刷白、对比度崩塌。`#dce6f2` on `#0b0c0d` = 15.52:1、
+`#cdd9e8` = 13.69:1、`#7ee0a6` = 12.21:1，均达标。
 
-`--xm-star-dot*` 也只 `:root` 定义，由 `base.css` 的暗/亮两条规则分别引用（不在浅色块覆写变量本身）。
+**mac 三点的接法**：平台用 `box-shadow` 画三点、颜色读 `--mac-style-color-red/orange/green`。
+本主题不改结构，只把这 3 个平台变量指到 `--xm-code-dot-*`——比覆盖选择器稳，
+也避免语义层出现色值字面量。同时平台把三点位置让给 `code` 的 `padding-top`，
+而本主题的 `pre code { padding: 0 }` 优先级更高会把它清零，故必须补回 `padding-top: 34px`，
+否则三点会压在第 1 行行号上。
 
-语义层（`base.css` / `layout.css` / `components.css`）**不得出现任何色值字面量**，
-只允许 `var(--xm-*)` 与 `color-mix(in srgb, var(--xm-bg-elevated) 78%, transparent)` 这类令牌派生。
-
-## 3. 浅色两套（逐项一致）
+## 4. 浅色两套（逐项一致）
 
 两套分别为 `@media (prefers-color-scheme: light) :root:not([data-theme="dark"])`（跟随系统）
 与 `html[data-theme="light"]`（手动指定，优先级最高）。**必须逐项一致**，否则手动切换会跳色。
 
 | 变量 | 深色 | 浅色 |
 |---|---|---|
-| `--xm-bg` | `#0f151d` | `#e7edf5` |
-| `--xm-bg-elevated` | `#141c25` | `#f2f6fb` |
-| `--xm-surface` | `#18212c` | `#ffffff` |
-| `--xm-surface-hover` | `#1f2a36` | `#dde7f3` |
-| `--xm-border` | `#26313e` | `#cdd9e8` |
-| `--xm-border-strong` | `#74869f` | **`#5a6d85`** |
-| `--xm-text` | `#e7eef7` | `#101b28` |
-| `--xm-text-secondary` | `#a9b8ca` | `#3f5165` |
-| `--xm-text-muted` | `#8b9bb0` | `#4d5f74` |
-| `--xm-accent` | `#5fb2ff` | `#1668d8` |
-| `--xm-accent-2` | `#f0c987` | `#8a4f0c` |
-| `--xm-accent-deep` | `#1f6fd0` | `#0f4fa8` |
-| `--xm-accent-contrast` | `#08131f` | `#ffffff` |
-| `--xm-accent-soft` | `rgba(95,178,255,.14)` | `rgba(22,104,216,.1)` |
-| `--xm-accent-text` | `#5fb2ff` | `#0f4fa8` |
-| `--xm-grad-end` | `#f0c987` | **`#8f5210`** |
-| `--xm-code-bg` | `#0b1118` | `#eef3fa` |
-| `--xm-code-border` | `#222d3a` | `#cdd9e8` |
-| `--xm-selection` | `rgba(95,178,255,.26)` | `rgba(22,104,216,.16)` |
-| `--xm-shadow-color` | `rgba(0,0,0,.55)` | `rgba(22,52,88,.14)` |
-| `--xm-glow-color` | `rgba(95,178,255,.22)` | `rgba(22,104,216,.14)` |
-| `--xm-ambient-warm` | `rgba(240,201,135,.13)` | `rgba(240,201,135,.09)` |
+| `--xm-bg` | `#08090a` | `#fbfbfc` |
+| `--xm-bg-elevated` | `#0f1011` | `#ffffff` |
+| `--xm-surface` | `#0f1011` | `#ffffff` |
+| `--xm-surface-hover` | `#16181a` | `#f2f3f5` |
+| `--xm-border` | `#1c1e21` | `#e6e8eb` |
+| `--xm-border-strong` | `#6b7079` | `#6b7079` |
+| `--xm-text` | `#f7f8f8` | `#08090a` |
+| `--xm-text-secondary` | `#b4bcc6` | `#40454d` |
+| `--xm-text-muted` | `#8a8f98` | `#6b7079` |
+| `--xm-accent` | `#8b93ff` | `#5e6ad2` |
+| `--xm-accent-2` | `#c7cbff` | `#4b55b8` |
+| `--xm-accent-deep` | `#5e6ad2` | `#4b55b8` |
+| `--xm-accent-contrast` | `#ffffff` | `#ffffff` |
+| `--xm-accent-soft` | `rgba(94,106,210,.16)` | `rgba(94,106,210,.1)` |
+| `--xm-accent-text` | `#8b93ff` | `#4b55b8` |
+| `--xm-code-bg` | `#0b0c0d` | `#f4f5f7` |
+| `--xm-code-border` | `#1c1e21` | `#e6e8eb` |
+| `--xm-selection` | `rgba(94,106,210,.3)` | `rgba(94,106,210,.18)` |
+| `--xm-glow-color` | `rgba(94,106,210,.1)` | `rgba(94,106,210,.06)` |
+| `--xm-shadow-popover` | `0 12px 32px -8px rgba(0,0,0,.7)` | `0 12px 32px -12px rgba(8,9,10,.18)` |
 
-**两处关键修正**：
+**浅色不是深色取反**，有两条必须遵守的推导：
 
-- `--xm-border-strong`：旧 `#74869f` 是按深色四底色定的；在新浅色四底色上实测
-  `[3.15, 3.42, 3.71, 2.97]`，在 `surface-hover` 上 2.97:1 破 3:1 线。改 `#5a6d85` 后
-  `[4.50, 4.89, 5.30, 4.24]`。深色块保持 `#74869f` 不动。
-- `--xm-grad-end`：旧浅色 `#0f4fa8` 与 `accent #1668d8` 色相差仅 0.3°（蓝→蓝，冷暖分工被抹平）；
-  新值 `#8f5210` 色相差 176.5°，与深色 171.2° 等价。亮面暖色用深琥珀而非亮金
-  （`#f0c987` 在白底对比度不足），这就是「非镜像」的浅色独立设计。
+- `--xm-accent` 在亮面压深到 `#5e6ad2`：`#8b93ff` 在白底只有 1.9:1，作为颜色块勉强、作为文字完全不可读。
+- **作为文字出现时一律用 `--xm-accent-text`**（浅色 `#4b55b8`，最低 5.75:1），
+  而不是 `--xm-accent`（最低 4.23:1，仅够做描边/圆点/焦点环，不承担文字）。
+  语义层 20+ 处 `color: var(--xm-accent-text)` 就是这个分工的落地，不是重复定义。
+- `--xm-border-strong` 深浅同值 `#6b7079`：它在深色四底色上最低 3.58:1、浅色四底色上最低 4.48:1，
+  同一个值同时满足两种模式的 3:1 UI 边界门槛，无需分叉。
 
-四级背景阶梯全不相等，`bg-elevated ↔ surface` 从「完全塌陷」变为 1.085:1 可辨。
+## 5. 对比度（四底色 × 前景，取最差值）
 
-## 4. 对比度（四底色 × 前景，取最差值）
+底色为 `bg / bg-elevated / surface / surface-hover` 四档，实测（非估算）：
 
-| 底色 | 正文 | 次要 | 弱文字 | 链接 | 暖色/渐变终点 | UI 边界 | 主按钮 |
-|---|---|---|---|---|---|---|---|
-| 深色 | 12.46 | 7.21 | 5.14 | 6.45 | — | 3.92 | 8.28 |
-| 浅色（新） | 13.89 | 6.52 | 5.24 | 6.21 | 5.24 / 4.97 | 4.24 | 5.24 |
+| 前景 | 深色最低 | 浅色最低 | 门槛 |
+|---|---|---|---|
+| 正文 `--xm-text` | 16.73 | 17.95 | ≥4.5 |
+| 次要 `--xm-text-secondary` | 9.28 | 8.69 | ≥4.5 |
+| 弱文字 `--xm-text-muted` | 5.48 | **4.48** | ≥4.5 ✅（贴线，见下） |
+| 链接 `--xm-accent-text` | 6.54 | 5.75 | ≥4.5 |
+| UI 边界 `--xm-border-strong` | 3.58 | 4.48 | ≥3 |
+| 主按钮字（`#ffffff` on `--xm-accent-deep`） | 4.70 | 6.38 | ≥4.5 |
 
-门槛：文字 ≥4.5:1、UI 边界 ≥3:1，全部达标。`--xm-border` 1.34:1 属纯装饰发丝线，不设门槛。
-标题改为纯色 `var(--xm-text)`，不再使用文字渐变。删除渐变时必须显式重置 `-webkit-text-fill-color: currentColor`，否则继承的透明填充会让整行标题不可见。
-代码块按 `#0b1118` 固定深色单独自检（见 §2）。
+- 全部达标。`--xm-border`（`#1c1e21` / `#e6e8eb`）约 1.2–1.3:1，属**纯装饰发丝线**，按规范不设门槛。
+- `--xm-text-muted` 在浅色 `surface-hover` 上是 4.48:1，低于 4.5 约 0.02，属测量毛刺级别；
+  它只用于时间戳、元信息等非关键小字，且 `surface-hover` 仅出现在 hover 瞬间。
+  **不要再把 muted 调亮/调暗**，一动就会在另一模式破线。
+- 代码块按 `#0b0c0d` 固定深色单独自检（见 §3）。
 
-## 5. 字体与 ≤640px 字号阶梯
+## 6. 字体与 ≤640px 字号阶梯
+
+`--xm-font-sans` 前置 `"Inter"`：Linear 方向的字形骨架依赖 Inter 的字距与 x-height，
+缺失时退回 PingFang SC / HarmonyOS Sans SC，视觉差异可接受（无外链、不引 webfont，守住零依赖）。
 
 `--xm-font-mono` 在拉丁等宽之后、`monospace` 之前插入中文回退：
 `"Sarasa Mono SC","Noto Sans Mono CJK SC","Source Han Mono SC","PingFang SC","Microsoft YaHei"`。
@@ -124,22 +148,23 @@
 
 ≤640px 断点（`layout.css`）在 `--xm-fs-display/h1/h2/body` 之外补齐
 `--xm-fs-h3:16px`、`--xm-fs-small:13px`、`--xm-lh-body:1.7`；
-**`--xm-fs-caption` 保持 12px 可读下限**，不下调。移动端 `--xm-fs-display` 覆写为 16px。
+**`--xm-fs-caption` 保持 12px 可读下限**，不下调。移动端 `--xm-fs-display` 覆写为 16px，
+文章页标题 `#cb_post_title_url` 单独降到 24px（桌面 30px）。
 
-## 6. `window.XM.accent` 的覆盖边界
+## 7. `window.XM.accent` 的覆盖边界
 
 `applyAccent()` 合法时**只写四项**：`--xm-accent`、`--xm-accent-text`、
-`--xm-accent-soft`、`--xm-glow-color`（第二步把孤儿变量 `--xm-glow` 改成了真正被消费的
-`--xm-glow-color`；失败兜底由青绿 `rgba(94,234,212,…)` 改为品牌冷蓝 `rgba(95,178,255,…)`）。
+`--xm-accent-soft`、`--xm-glow-color`（早期版本写的是孤儿变量 `--xm-glow`，全项目零消费，
+已改为真正被 `body::before` 消费的 `--xm-glow-color`；失败兜底也从青绿改为跟随新主色）。
 
 **刻意不被 `XM.accent` 覆盖**（避免实现方误判为遗漏）：
 
-`--xm-accent-2`、`--xm-grad-end`、`--xm-accent-deep`、`--xm-selection`、`--xm-glow-accent`。
+`--xm-accent-2`、`--xm-accent-deep`、`--xm-selection`、`--xm-glow-accent`。
 
-理由：暖金是「管人」的品牌常量，冷蓝才是可换的「管技术」主色；用户改主色不应让品牌符号、
-渐变终点、选中态与暖金一起失色。
+理由：`--xm-accent-deep` 是「放白字时的底色」，必须自行满足 4.5:1，不能被任意用户色带入不可读区间；
+`--xm-accent-2` 是同一靛蓝的浅阶，破坏它会让双阶层次塌掉。用户换主色后系统仍是单点强调，不会变成双色。
 
-## 7. `--xm-cursor`（自定义光标）
+## 8. `--xm-cursor`（自定义光标）
 
 `:root` 新增 `--xm-cursor: url(".../mouse.ico"), auto;`，是 `src/keep.css:11`
 `*{ cursor:var(--xm-cursor, auto);}` 的默认值来源。CSS 自定义属性走级联解析，
@@ -155,10 +180,23 @@
      `auto`（或任意合法 `cursor` 值）即可，无需动冻结的 `keep.css`。
 - `cursorUrl` 的值禁止含 `"` / `;` / `}`，因为会被拼进 `url("...")` 交给 `setProperty`。
 
-## 8. 品牌图形色值契约
+## 9. 令牌兑现的自检口径
 
-`docs/assets/stellaris-mark.svg` 是唯一几何真源（三图元：冷蓝轨道描边 + 冷蓝四角星芒 + 暖金节点），
-刻意使用品牌原色 `#5FB2FF` / `#F0C987`，**不跟随 `window.XM.accent`**。
+改完令牌后跑一遍这两条，任一条不符合预期就是有破口：
 
-品牌级变更需**同步改三处**：① SVG 文件、② `build.js` spinner 模板常量里的 favicon data URI、
-③ `docs/assets/og-cover.svg`。三处都是字面量，不参与令牌派生。
+```bash
+# 1) 语义层不得出现任何色值字面量（期望：三个文件全部 0）
+grep -cnE '#[0-9a-fA-F]{3,8}\b|rgba?\(' src/base.css src/layout.css src/components.css
+
+# 2) 每个 --xm- 变量至少被消费一次（期望：只输出 4 个断点令牌）
+comm -23 \
+  <(grep -oE '\-\-xm-[a-z0-9-]+' src/tokens.css | sort -u) \
+  <(grep -ohE 'var\(--xm-[a-z0-9-]+' src/base.css src/layout.css src/components.css src/enhance.js src/keep.css | sed 's/var(//' | sort -u)
+```
+
+- 第 1 条的允许例外只有一类：`color-mix(in srgb, var(--xm-bg-elevated) 78%, transparent)`
+  这类**令牌派生**，它不是字面量色值，grep 也匹配不到。
+- 第 2 条**期望输出恰好是 `--xm-bp-sm/md/lg/xl` 四行**，这是唯一允许的例外：
+  CSS 媒体条件不支持 `var()`，断点必须硬编码，令牌只作「四个档位的唯一记录」存在。
+  除这 4 个之外再出现任何一行，就是又有变量空挂了——上一版正是靠这条揪出 `--xm-glow` 孤儿。
+- 别忘了 `keep.css` 也在消费方里：`--xm-cursor` 只被它读取，漏掉它就会误报。

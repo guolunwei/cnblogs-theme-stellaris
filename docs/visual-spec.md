@@ -1,254 +1,239 @@
-# 星轨 Stellaris · 视觉精修规范（第二批实现依据）
+# 星轨 Stellaris · 视觉规范（Linear 式工程极简）
 
-> 由视觉设计侧产出、主理人汇编并裁决。只读规范，未改文件。
-> 所有对比度按 WCAG 相对亮度公式在四种底色上逐一复算。
-> 本文件是第二批代码改动的唯一视觉依据；验收断言见 `qa-checklist.md`。
+> 本文件是**当前视觉系统的描述与约束**，不是待办清单。所有数值均与 `src/*.css` 实际实现一致，
+> 改样式前先读这里，改完同步这里。令牌逐项定义见 `docs/tokens.md`，组件契约见 `docs/components.md`，
+> 验收断言见 `docs/qa-checklist.md`。
+>
+> 上一版规范（冷蓝 + 暖金双色分工、星轨节点图形、网点纹理、卡片浮起）已整体废止，
+> 相关元素在重制中删除。若在代码或旧文档中看到「暖金」「星轨节点」「星点」，那是残留，不是设计意图。
 
-## 0. 主理人裁决（5 项待裁决，已拍板）
+## 1. 方向声明
 
-| # | 议题 | 裁决 | 理由 |
-|---|---|---|---|
-| 1 | `--xm-content-w:760px` 零消费 | **删除** | 宽度由 `--xm-page-w − --xm-sidebar-w` 与 grid 决定，插不进固定 760px。留一个「改了没反应」的变量正是本批要修的同类破口。不引入 `--xm-measure:68ch`（会让正文右缘与全宽表格/代码块不齐） |
-| 2 | 页头 8px 品牌节点是否算「冗余第三焦点」 | **采纳，但按「拆进既有第一焦点」方案** | 不新增独立 DOM / 图形框 / 并列徽标，只是既有 `#blogTitle h1` 下划线末端一个 8px 点，复用已有元素。与项目铁律禁止的「页头 logo 空位造圆盘」不是同一件事。实现后若目视抢焦点，退化为「符号仅落 favicon + og-cover」 |
-| 3 | og-cover 是否提交一次性 PNG | **只提交 `docs/assets/og-cover.svg`，不提交 PNG** | 保持零二进制产物、不进构建链。GitHub Social preview 上传由仓库所有者手工做，README 写一句说明即可 |
-| 4 | `applyAccent()` 孤儿变量是否本批修 | **纳入** | 属令牌兑现，与「改一份 tokens.css 换肤」直接相关 |
-| 5 | TOC 与灯箱互斥是否补 JS | **不单独补** | 灯箱改用原生 `<dialog>.showModal()` 后背景自动 inert；体验规范 A14 的守卫防止误关目录，两者已覆盖，不需要额外互斥逻辑 |
+对标 Linear / Stripe / Vercel 这类**产品型官网**，而不是「技术博客模板」。三条不能违背的判断：
 
-**另有一处规范冲突裁定**：视觉规范说「既有中文注释不主动翻译」，体验规范说「被改动函数内原有中文注释顺手英文化」。
-**按视觉规范执行** —— 只保证新增/改写部分英文，不主动翻译既有中文注释，避免大 diff、零视觉收益。
+1. **内容唯一发光，界面全部退后。** 画布近黑（`#08090a`），文字近白（`#f7f8f8`），中间只允许
+   两级灰阶过渡。任何界面元素都不能比正文更亮。
+2. **用线分层，不用阴影分层。** 全站 `box-shadow: none`。分区靠 1px 发丝线 + 间距，
+   hover 只提升描边亮度，不位移、不放大、不发光、不加投影。
+3. **一个强调色，且只出现在六个位置。** 靛蓝 `#8b93ff` 是系统里唯一的彩色。多一个颜色就破功。
 
-**dist 红线更新**：第一批禁止重建 dist 的红线，在第二批**解除**。
-第二批允许 `node build.js` 重建 dist，但报告中必须列出「重贴哪几个框」的部署清单；**线上后台仍由用户自己操作，任何人不得代贴**。
+不追求的东西：拟物、玻璃拟态堆叠、渐变文字、彩色图标、装饰性插画、多色标签体系。
 
-## 1. 铁律
+## 2. 画布与栅格
 
-- `src/keep.css` 整块冻结（`mouse.ico` 光标、3D spinner、`#loading` 的 `z-index:99999999`）。
-- 百度统计与 `cursor-effects.js` 引用保持原样；SimpleMemory 皮肤前提不变；三框粘贴形态不变。
-- 五层 CSS 顺序 `keep → tokens → base → layout → components` 不变。
-- 不引图片外链、不新增 npm 依赖、不新增打包器、不新增运行时 JS 库。
-- **禁止手改 `dist/*`**：全部由 `node build.js` 生成；构建链不暴露给使用者，与「零依赖」不冲突。
-- 动效只用现有 `--xm-dur-*`/`--xm-ease*`；圆角/间距/字级只用现有 token；`z-index` 只用 `--xm-z-*`。
-- `@media` 条件硬编码 `640/900/1200/1440`（CSS 媒体条件不支持 `var()`）。
-- 新增动效须在 `components.css` §16 局部兜底块追加终态，**不改** §10 全局 `prefers-reduced-motion` 规则。
-
-## 2. 品牌图形锚点「星轨节点 / Orbit Node」
-
-唯一几何定义（`viewBox 0 0 24 24`，三图元 = 三句概念）：倾斜轨道用冷蓝描边、四角星芒用冷蓝实心、轨道节点用暖金实心。
-存为 `docs/assets/stellaris-mark.svg`（唯一真源）：
-
-```svg
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>
-  <ellipse cx='12' cy='12' rx='10' ry='4.5' transform='rotate(-32 12 12)' fill='none' stroke='#5FB2FF' stroke-width='1.6'/>
-  <path d='M12 7.2 L13.4 10.6 L16.8 12 L13.4 13.4 L12 16.8 L10.6 13.4 L7.2 12 L10.6 10.6 Z' fill='#5FB2FF'/>
-  <circle cx='20.5' cy='6.7' r='1.9' fill='#F0C987'/>
-</svg>
-```
-
-- **页头**：只追加 3 条规则到 `base.css`，不改现有 `#blogTitle h1::after`（128-137）。`#blogTitle h1::before` 做 8px 暖金点，`right:0; bottom:-3.5px`（8/2 − 1/2 = 3.5，让中心对齐 1px 线），`opacity:0` 起始，仅在 `prefers-reduced-motion: no-preference` 下用 `xm-node` 动画淡入；§16 追加终态 `opacity:1; transform:none`。
-- **favicon**：页首 HTML 最前面加一行 `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,...">`，data URI 内联、透明底、不加深色底板。**必须同步改 `build.js` 的 `spinner` 模板常量**，否则下次构建会丢。
-- **og-cover**：`docs/assets/og-cover.svg`，1200×630、安全区 80px，符号置于 `x=80,y=265,size=160`，标题「星轨 Stellaris」+ 等宽副题 `STAR ORBIT · CNBLOGS THEME`，右下角 2px 冷蓝→暖金轨道段。各平台 `og:image` 要求 http(s) 绝对 URL 位图，data URI / SVG 普遍不被接受 —— 这只是仓库资产，实际社交缩略图由仓库所有者在 GitHub Settings → Social preview 手工上传。
-- **配色契约**：符号刻意用品牌原色 `#5FB2FF`/`#F0C987`，**不跟随 `window.XM.accent`**（用户改主色不应让品牌符号失色）。data URI 内是字面量，品牌级变更需同步改三处（SVG 文件 / favicon URI / og-cover），文档要写明。
-- **避免**：64×64 圆盘、字母盘、页头并列徽标、给节点加 glow/shadow/hover、图片外链、为 og:image 编造 URL。
-
-## 3. 浅色套独立设计（等价但非镜像）
-
-设计原则：同样的四级层次、冷暖分工、对比度门槛，但在亮面重新推导，不是取反。
-深色「越浮起越亮」；浅色改为「越浮起越白，hover 回落到冷蓝灰」；暖金在白底必须压深成深琥珀才能承载文字。
-
-### 3.1 四级背景阶梯（两套浅色块都要改）
-
-| token | 当前 | 目标 | L |
-|---|---|---|---|
-| `--xm-bg` | `#f5f8fc` | `#e7edf5` | 0.8415 |
-| `--xm-bg-elevated` | `#ffffff` | `#f2f6fb` | 0.9175 |
-| `--xm-surface` | `#ffffff` | `#ffffff` | 1.0000 |
-| `--xm-surface-hover` | `#edf2f9` | `#dde7f3` | 0.7900 |
-
-四级全不相等，`bg-elevated`↔`surface` 从「完全塌陷」变为 1.085:1 可辨。
-
-### 3.2 完整浅色覆写清单
-
-**两套必须逐项一致**：`@media (prefers-color-scheme: light) :root:not([data-theme="dark"])` 与 `html[data-theme="light"]`。
-
-| 变量 | 当前 → 目标 |
-|---|---|
-| `--xm-bg` | `#f5f8fc` → `#e7edf5` |
-| `--xm-bg-elevated` | `#ffffff` → `#f2f6fb` |
-| `--xm-surface` | `#ffffff`（不变） |
-| `--xm-surface-hover` | `#edf2f9` → `#dde7f3` |
-| `--xm-border` | `#dce4ee` → `#cdd9e8` |
-| `--xm-border-strong` | `#74869f` → **`#5a6d85`** |
-| `--xm-text` | `#16202b` → `#101b28` |
-| `--xm-text-secondary` | `#4a5a6c` → `#3f5165` |
-| `--xm-text-muted` | `#5d6d80` → `#4d5f74` |
-| `--xm-accent` | `#1668d8`（不变） |
-| `--xm-accent-2` | `#8a5e0f` → `#8a4f0c` |
-| `--xm-accent-deep` | `#0f4fa8`（不变） |
-| `--xm-accent-contrast` | `#ffffff`（不变） |
-| `--xm-accent-soft` | `rgba(22,104,216,.1)`（不变） |
-| `--xm-accent-text` | `#1668d8` → `#0f4fa8` |
-| `--xm-grad-end` | `#0f4fa8` → **`#8f5210`** |
-| `--xm-code-bg` | `#f0f4f9` → `#eef3fa` |
-| `--xm-code-border` | `#d8e1ec` → `#cdd9e8` |
-| `--xm-selection` | 不变 |
-| `--xm-shadow-color` | `.12` → `.14` |
-| `--xm-glow-color` | `.18` → `.14` |
-| `--xm-ambient-warm` | 新增，浅色覆写 `rgba(240,201,135,.09)` |
-
-`tokens.css:180` 的 `--xm-grad-end` 缩进异常（多两空格）顺手对齐。
-
-**冷暖分工重建**：旧浅色 `accent #1668d8 → grad-end #0f4fa8` 色相差仅 0.3°（蓝→蓝，分工被抹平）；新值 `#8f5210` 色相差 176.5°，与深色 171.2° 等价。亮面暖色用深琥珀而非亮金（`#f0c987` 在白底对比度不足），这就是「非镜像」。
-
-**`--xm-border-strong` 必须改**：P0 的 `#74869f` 是按深色四底色定的；在新浅色四底色上实测 `[3.15, 3.42, 3.71, 2.97]`，在 `surface-hover` 上 2.97:1 < 3:1 破线。改 `#5a6d85` 后 `[4.50, 4.89, 5.30, 4.24]`。深色块保持 `#74869f` 不动。
-
-### 3.3 对比度自检（四底色 × 前景，最差值）
-
-| | 正文 | 次要 | 弱文字 | 链接 | 暖色/渐变终点 | 边框 | 主按钮 |
-|---|---|---|---|---|---|---|---|
-| 深色 | 12.46 | 7.21 | 5.14 | 6.45 | — | 3.92 | 8.28 |
-| 浅色（新） | 13.89 | 6.52 | 5.24 | 6.21 | 5.24 / 4.97 | 4.24 | 5.24 |
-
-门槛：文字 ≥4.5:1、UI 边界 ≥3:1，全部达标。标题渐变三停在 `#f2f6fb` 上分别 16.00 / 4.83 / 5.72:1，末端不会「糊掉」。`--xm-border` 1.34:1 属纯装饰发丝线，不设门槛。
-
-### 3.4 代码块在浅色仍固定深色
-
-`components.css:280` 的既定意图保留。因此 §4.1 的代码块类 token **只在 `:root` 定义一次，浅色两套禁止覆写**。`#dce6f2` on `#0b1118` = 15.03:1，`#cdd9e8` = 13.26:1，`#7ee0a6` = 11.83:1，均达标。
-
-## 4. 令牌完全兑现
-
-### 4.1 新增 token（写入 `src/tokens.css` 的 `:root`，注释英文）
-
-```css
---xm-ambient-warm:   rgba(240, 201, 135, 0.13);
---xm-star-dot:       rgba(255, 255, 255, 0.07);
---xm-star-dot-light: rgba(22, 32, 43, 0.075);
---xm-code-block-bg:  #0b1118;
---xm-code-block-fg:  #dce6f2;
---xm-code-ln-fg:     rgba(139, 155, 176, 0.72);
---xm-code-copy-bg:           rgba(11, 17, 24, 0.72);
---xm-code-copy-border:       rgba(116, 134, 159, 0.45);
---xm-code-copy-fg:           #cdd9e8;
---xm-code-copy-done:         #7ee0a6;
---xm-code-copy-done-border:  rgba(126, 224, 166, 0.6);
---xm-lightbox-scrim: rgba(6, 10, 15, 0.86);
-```
-
-- 跨模式常量（code-block / code-copy / code-ln-fg / lightbox-scrim）只 `:root` 一次，**浅色禁止覆写**。
-- `--xm-star-dot*` 只 `:root` 定义，由 `base.css` 暗/亮两条规则分别引用。
-- `--xm-ambient-warm` 允许浅色两套覆写。
-- 命名统一 `--xm-<category>-<role>[-<state>]`；语义层不得出现新色值字面量。
-
-### 4.2 全仓 16 处硬编码替换（不是 5 处）
-
-| 文件:行 | 当前 → 目标 |
-|---|---|
-| `base.css:38` | `rgba(240,201,135,.13)` → `var(--xm-ambient-warm)` |
-| `base.css:51` | `rgba(255,255,255,.045)` → `var(--xm-star-dot)` |
-| `base.css:56` / `:60` | `rgba(22,32,43,.05)` → `var(--xm-star-dot-light)` |
-| `components.css:286` | `background:#0b1118` → `var(--xm-code-block-bg)` |
-| `components.css:298` | `color:#dce6f2` → `var(--xm-code-block-fg)` |
-| `components.css:706` | `rgba(116,134,159,.45)` → `var(--xm-code-copy-border)` |
-| `components.css:708` | `rgba(11,17,24,.72)` → `var(--xm-code-copy-bg)` |
-| `components.css:709` | `#cdd9e8` → `var(--xm-code-copy-fg)` |
-| `components.css:732` | `#7ee0a6` → `var(--xm-code-copy-done)` |
-| `components.css:733` | `rgba(126,224,166,.6)` → `var(--xm-code-copy-done-border)` |
-| `components.css:1120` / `:1156` / `:1170` | `rgba(139,155,176,.72)` → `var(--xm-code-ln-fg)` |
-| `components.css:1127` | `background:#0b1118` → `var(--xm-code-block-bg)` |
-| `components.css:1186` | `rgba(6,10,15,.86)` → `var(--xm-lightbox-scrim)` |
-
-验收：在 `base.css`/`layout.css`/`components.css` grep `#<hex>` 与 `rgba?\(` 应为 **0 命中**（`color-mix(in srgb, var(--xm-bg-elevated) 78%, transparent)` 属 token 派生，允许）。`dist` 内不应再出现 `#0b1118`/`#dce6f2`/`#cdd9e8`/`#7ee0a6` 字面量（tokens.css 定义段除外）。
-
-### 4.3 JS 侧破口（`src/enhance.js:50-56`）
-
-`applyAccent()` 写入 `--xm-glow`，但全项目零消费（CSS 用的是 `--xm-glow-color` / `--xm-glow-accent`）—— 用户改主色时发光不跟随。改法：
-
-```js
-/* Keep the ambient glow in sync with a custom accent; --xm-glow was an orphan. */
-root.style.setProperty("--xm-glow-color", hexToRgba(XM.accent, 0.22));
-```
-
-同时 `hexToRgba()` 的失败兜底 `rgba(94,234,212,…)`（青绿，与品牌无关）改为品牌冷蓝 `rgba(95,178,255,<alpha>)`。
-
-**刻意不被 `XM.accent` 覆盖**（文档写明，避免实现方误判为遗漏）：`--xm-accent-2`、`--xm-grad-end`、`--xm-accent-deep`、`--xm-selection`、`--xm-glow-accent`。理由：暖金是「管人」的品牌常量，冷蓝才是可换的「管技术」主色。
-
-## 5. 非文章页视觉密度（3 处，纯 CSS、零 DOM、零 JS、零新 token）
-
-1. **首页卡片轨道刻度**：`.dayTitle` 加 `padding-left:var(--xm-s4)` + `::before` 6px 冷蓝点（复用侧栏星点语言）；`.day:hover` 时变暖金、`opacity:1`，过渡用 `--xm-dur-fast`。
-2. **归档条目**：`#mainContent .forFlow .entrylistItem` 的 `border-bottom:1px dashed` 改 `solid`，加 `border-radius:var(--xm-r-button)` 与 hover 面 `background:var(--xm-surface-hover)`。
-3. **跨页「轨道站点」标题节点**：`.entrylistTitle` / `.catListTitle` 加 8px 暖金节点，与既有 `border-left:3px solid var(--xm-accent-deep)` 组成「冷蓝轨 + 暖金站」。`left` 偏移按实际 DOM 微调（规范不臆断 DOM）。
-
-§16 追加 reduced-motion 终态。避免：伪造阅读数/热门权重、`:nth-child` 造分级、卡片套卡片、加阴影、新增 JS 监听。
-
-## 6. 其余 5 项结论
-
-| 项 | 结论 | 具体值 |
+| 项 | 值 | 说明 |
 |---|---|---|
-| `--xm-content-w` | **删除** | `tokens.css:118` 连同注释引用一起删 |
-| `≤640px` 只缩 4 级字号 | **改** | `layout.css:239-244` 补 `--xm-fs-h3:16px`(17→16)、`--xm-fs-small:13px`(13.5→13)、`--xm-lh-body:1.7`(1.75→1.7)；`--xm-fs-caption` 保持 12px 可读下限 |
-| `--xm-font-mono` 无中文回退 | **改** | `tokens.css:53-54` 在拉丁等宽之后、`monospace` 之前插入 `"Sarasa Mono SC","Noto Sans Mono CJK SC","Source Han Mono SC","PingFang SC","Microsoft YaHei"` |
-| `body::before` 氛围 | **改（参数级，并修正上一版定性）** | fixed 恒驻，**不存在滚动后塌陷**。真问题：`inset:-25%` 把亮部推出视口、星点有效 alpha 仅≈2.3%。改为 `inset:-8% -10% auto -10%`、`body::after opacity:.5→.7`、星点 alpha `.045→.07`/`.05→.075`。`height:70vh` 与 `opacity:.8` 不动。避免改 absolute、加 blur、新增第三图层、把柔光铺满 100vh |
-| `README.md:14` 对比度数字 | **改（仅文档）** | 替换为 §3.3 的四底色最差值表，并注明代码块按 `#0b1118` 单独自检 |
+| 画布 | `--xm-bg` `#08090a` | 近黑而非纯黑，`#000` 会让细字分辨率崩掉 |
+| 页面最大宽 | `--xm-page-w` `1180px` | 比博客模板常见的 1400px 窄，视线更集中 |
+| 侧栏宽 | `--xm-sidebar-w` `264px` | 固定宽度，不参与 flex 伸缩 |
+| 主列 | grid `1fr` | 宽度由「页宽 − 侧栏 − gap」推导，**不存在**固定 `--xm-content-w` |
+| 栏间距 | `40px`（`#main` gap） | 双栏间距必须大于侧栏内部行距，才读得出「两个区域」 |
+| 页面左右留白 | `--xm-s8` `32px` | 移动端降到 `16px` |
+| 主体上边距 | `--xm-s8` `32px` | 页头本身占 56px，不需要额外大留白 |
 
-## 7. 组件契约（shadcn 三层：token → variant → composition）
+**氛围**只有一个：`body::before` 一条 460px 高的顶部径向光晕，中心 `--xm-glow-color`（靛蓝 10% alpha），
+72% 处完全透明。**不做**网点纹理、不做星云、不做第二图层、不做滚动视差。
+光晕贴着视口顶部固定，不随滚动移动，滚动后自然被内容覆盖。
 
-### 7.1 三层定义
+## 3. 分区语言：发丝线与两级描边
 
-| 层 | 职责 | 载体 |
+全站只有两种描边，分工严格：
+
+| token | 值（深/浅） | 用途 | 对比度要求 |
+|---|---|---|---|
+| `--xm-border` | `#1c1e21` / `#e6e8eb` | 卡片外框、模块分隔线、表格横线、引用竖线 | **不设门槛**，纯装饰发丝线（≈1.2:1） |
+| `--xm-border-strong` | `#6b7079`（深浅同值） | 输入框边、按钮边、分页器边、需要「看见边界」的控件 | ≥3:1（实测深 3.58 / 浅 4.48） |
+
+用法纪律：
+
+- 区块之间**优先用 `border-top` 分隔**，而不是给每块加卡片框。侧栏就是这样：一个发丝线接一个模块，
+  首块去顶线，取消 `gap`，靠 padding 造呼吸感。
+- **禁止卡片套卡片**。文章页平台结构是 `#topics > .post > #cnblogs_post_body`，两层都自带卡片，
+  必须把内层拍平成纯排版容器（`margin/padding: 0; background: none; border: 0`）。
+- `border-radius` 只在**容器**上出现：卡片 `10px`、按钮/输入框 `6px`、代码块 `8px`、chip `999px`。
+  分隔线、表格、引用竖线一律直角。
+- hover 只允许改 `border-color`，目标是 `color-mix(in srgb, var(--xm-text) 20%, transparent)`
+  ——即用文字色混出「亮一档的线」，不引入新色值。
+
+## 4. 排版标尺
+
+紧凑是这套设计的核心特征，字号整体比阅读型博客小 1–2px：
+
+| 角色 | token | 桌面 | ≤640px | 字重 | 行高 |
+|---|---|---|---|---|---|
+| 页面标题（display） | `--xm-fs-display` | 16px | 16px | 500 | 1.2 |
+| 文章标题 | 直接写 `30px` | 30px | 24px | 640 | 1.28 |
+| 卡片标题（h2 级） | `--xm-fs-h2` | 21px | 18px | 590 | 1.4 |
+| 正文 | `--xm-fs-body` | 15px | 15px | 400 | 1.75 |
+| 小字（摘要、按钮） | `--xm-fs-small` | 13.5px | 13px | — | 1.6 |
+| 元信息（caption） | `--xm-fs-caption` | 11.5px | 12px | 400 | 1.5 |
+
+- **文章标题是唯一允许 640 字重的地方**，其余标题 590 封顶，正文 400。层次靠字号与颜色，不靠加粗堆叠。
+- **等宽字体承担「标签」角色**，不是装饰：`.dayTitle`（日期）、`.postDesc`（元信息）、
+  `.catListTitle`（侧栏模块标题）、`.entrylistTitle`、`.feedbackManage`、代码行号。
+  统一 `letter-spacing: 0.04em`（侧栏标题 0.08em + `uppercase`），颜色 `--xm-text-muted`。
+  这是全站唯一「有性格」的排版手段，其它地方一律收敛。
+- 标题字距负向补偿：文章标题 `-0.02em`，卡片标题 `-0.012em`。大字号不补偿会显松。
+- 字体栈前置 `"Inter"`，缺失退回 PingFang SC / HarmonyOS Sans SC。**不引 webfont**，守零依赖。
+
+## 5. 强调色纪律
+
+`--xm-accent`（深 `#8b93ff` / 浅 `#5e6ad2`）是全站唯一彩色。判断标准不是「能出现在哪几个元素」，
+而是**它永远只表达「这是可交互的」或「这是当前项」**——不做背景铺底、不做插图、不做分类色彩。
+
+实际出现位置（改样式时以此为准，不要新增类别）：
+
+| 类别 | 具体位置 | 用哪个令牌 |
 |---|---|---|
-| L1 Token | 唯一真源：色/字/间距/圆角/描边/动效/层级/断点/布局 | `src/tokens.css` |
-| L2 Variant | 同一组件的形态/尺寸/色调分支 | `data-xm-*` 属性 + `.is-*` 状态类 |
-| L3 Composition | 组件嵌套、DOM 归属、状态、无障碍、token 依赖 | 平台容器 + 主题注入节点 |
+| 文字型链接 | 正文链接、`阅读全文`、导航 hover | `--xm-accent-text`（浅色压到 `#4b55b8`） |
+| 焦点环 | 全站 `:focus-visible` 的 2px outline | `--xm-accent` |
+| hover 描边 | 按钮、输入框、chip、分页器的边框提亮 | `--xm-accent` |
+| 实心主控件 | 主按钮、日历「今天」（**底色必须用 deep 阶**） | `background: --xm-accent-deep` + `--xm-accent-contrast` 文字 |
+| 状态指示 | 阅读进度条 `1px`、页面顶部光晕 | `--xm-accent` / `--xm-glow-color` |
+| 品牌弧线 | 页头 12px 四分之一弧 + 端点 | `--xm-accent` |
+| 滚动条 | `::-webkit-scrollbar-thumb:hover` | `--xm-accent` |
 
-**关键约束**：平台 DOM 不可改结构，`data-xm-*` 变体只能挂在**主题注入节点**上；平台容器只用既有 ID/class + `:has()` + 原生属性挂载样式，不伪造属性或数据。
+**硬约束：白字只能压在 `--xm-accent-deep` 上。** `#8b93ff` 与白色的对比度只有 1.73:1，
+在它上面写白字无论字重多少都不合格；`--xm-accent-contrast` 这个令牌的存在前提就是「底色是 deep 阶」。
+同理，实心按钮 hover **压暗**（`brightness(.94)`）而不是提亮——提亮会把 4.70:1 拉到 4.5 以下。
 
-**L2 字典**：`data-xm-c`（身份）、`data-xm-variant="default|flat|bare|outlined"`、`data-xm-size="sm|md|lg"`、`data-xm-tone="neutral|accent|warm|success"`、`data-xm-density="comfortable|compact"`。
-**状态一律用 `.is-*`**（`.is-current/.is-active/.is-visible/.is-stuck/.is-done/.is-broken/.is-loading/.is-logo-loading`）配合原生 `[hidden]`/`[disabled]`/`[aria-current]`/`[aria-expanded]`/`:hover`/`:focus-visible` —— `enhance.js` 已按此写入，双写会状态漂移。
+禁止：彩色边框装饰（非交互元素）、彩色标题、彩色图标、把强调色铺成大色块做区块背景、
+用强调色的不同透明度假装「多色标签体系」。`--xm-accent-2` 只是同一靛蓝的浅阶，不是第二种颜色。
 
-### 7.2 L3 DOM 契约两类
+## 6. 组件规范
 
-- **(A) 平台容器**：只挂样式、不改结构。含 `#home #header #blogTitle #navList #mainContent .forFlow #sideBar .day .dayTitle .postTitle .postCon .postDesc #cnblogs_post_body .newsItem .catListTitle .catListTag .entrylist* .catList .feedbackItem #comment_form_container .topicListFooter .cnblogs-toc-button #loading` 等。
-- **(B) 主题注入节点**：契约归我们，`enhance.js` 生成、`document.body` 直属。含 `.xm-progress .xm-fab .xm-fab__btn .xm-toc* .xm-copy .xm-code-ln .xm-lightbox .xm-readmeta .xm-sr-only .xm-mark`(新)。
-
-**组合规则**：① 注入节点一律 body 直属，**不得插入 `#sideBar`**；② `.xm-fab` 子节点顺序固定 目录→主题→回顶，目录按钮仅在有标题时存在；③ `pre` 内 `.xm-code-ln` 与原生 `table.hljs-ln` 互斥；④ 隐藏态一律 `hidden` 属性 + `[hidden]{display:none}`，真正移出 Tab 序列与无障碍树，**禁止 `opacity:0` 假隐藏**；⑤ `#loading` 与 `keep.css` 不参与组合契约。
-
-### 7.3 组件清单（16 个，每条需写明 DOM / 状态 / 变体 / 无障碍 / 依赖 token）
-
-文章卡 `.day`、正文 `#cnblogs_post_body`、代码块 `pre + .xm-copy + .xm-code-ln`、引用 `blockquote`、表格 `table`、TOC `.xm-toc`、FAB `.xm-fab__btn`、主题切换 `.xm-fab__btn--theme`、灯箱 `.xm-lightbox`、阅读时长 `.xm-readmeta`、导航 `#navList a.menu`、侧栏模块 `.newsItem`、标签云 `.catListTag a` / `.xm-chip`、归档 `.entrylist*`、按钮/表单/评论/分页、进度条/sr-only/品牌符号。
-
-其中值得固化的既有裁决：
-- 当前项用底部 **2px 轨道段**，不用 4px 星点；侧栏 `.newsItem ul li a::before` 星点保留。
-- 标签云**不做权重分级、不用 `:nth-child` 伪造热门**，等权 chip。
-- 归档不卡片套卡片；月归档 `.entrylistItem` 与日归档 `.day > .postTitle` 两套结构并列。
-- 主题切换：图标按 `mode`（非 `effectiveMode`）取，auto 态不加小圆点/环，`title`/`aria-label` 描述「点下去会变成什么」。
-- 阅读时长 `aria-hidden=true`（估算值不播报）。
-- `.xm-copy` 是 `<button type=button>`；行号槽 `aria-hidden=true` + `user-select:none` 且不进复制文本。
-
-### 7.4 `docs/components.md` 骨架
+### 6.1 首页文章卡 `.day`
 
 ```
-# Components
-## 0. Contract & conventions（DOM ownership / state / a11y / reduced-motion）
-## 1. Token layer
-## 2. Variant layer（data-xm-* 字典 + 变体矩阵 + 选择器示例）
-## 3. Composition layer（平台容器 / 注入节点 / 组合规则 / 互斥关系）
-## 4. Component catalog（16 条）
-## 5. Platform containers reference（标注「结构不可改」）
-## 6. Acceptance checklist
-## 7. Known limitations
+padding 20/24 · border 1px --xm-border · radius 10px · bg --xm-surface · 卡间距 16px
+hover：仅 border-color 提亮
 ```
 
-## 8. 落地顺序与验收
+- 内部顺序固定：`.dayTitle`（日期 · 阅读时长，等宽 caption）→ `.postTitle`（21px/590）→ 摘要 → `.xm-more`。
+- 摘要 `.c_b_p_desc` 截断为 **2 行**，且「阅读全文」必须由 JS 克隆成独立的 `.xm-more` 移到摘要之外，
+  否则会被截断裁掉半个链接。
+- `.postDesc` 用 `border-top` 与正文分开，等宽 caption。元信息文本由 JS 规整：
+  去 `posted @`、`2026年11月9日` → `2026.11.09`、`(30)` → `30`、计数之间补 ` · `。
 
-1. 令牌层（`tokens.css`）：12 个新 token + 浅色两套全表 + 删 `--xm-content-w` + mono 中文回退 + `≤640px` 阶梯。
-2. 兑现层（`base.css` / `components.css`）：16 处替换 + 品牌节点 + 3 处密度提升 + 氛围参数。
-3. JS 层（`enhance.js`）：`--xm-glow` 孤儿变量 + 兜底色。
-4. 页首/文档：`build.js` spinner 模板加 favicon link；`README.md:14` 替换；新增 `docs/components.md`、`docs/tokens.md`、`docs/assets/stellaris-mark.svg`、`docs/assets/og-cover.svg`。
-5. `node build.js` → 只贴 `dist/*.paste.*`，不贴 `custom.min.css`。
-6. 验收：dist 无残留硬编码色值；四底色对比度复算；深浅 + 三态切换逐页目视；reduced-motion 下扫光/节点/复制按钮终态可见；≤640px 无横向溢出；`keep.css` 光标与 `#loading` 未受影响；`XM.accent` 改色后发光跟随、暖金不跟随。
+### 6.2 文章页
 
-## 9. 未核实（如实保留，不臆断）
+- 外层 `#topics` 是唯一卡片（`padding: 40px`），内层 `#cnblogs_post_body` 拍平。
+- 标题下方一条 `border-bottom` 发丝线，之后直接进正文，**不加副标题区、不加作者条**。
+- `h2` 无左竖条、无装饰，靠字号 + 上间距分段；`h3` 17px/590。
+- 引用 `blockquote`：2px 竖线（`--xm-border-strong`）+ 极浅底，不用斜体、不用引号图形。
+- 表格：**只留横线**（`tbody` 行间 `border-bottom`），无竖线、无外框、无斑马纹；
+  外层 `.xm-table-wrap` 提供横向滚动，`≤640px` 时表格 `min-width: 460px`。
+- 图片：`max-width: 100%` + `radius 8px`，点击走灯箱。
+- `#green_channel`（分享条）、`#author_profile`（作者卡）都去掉平台虚线框，
+  作者卡重排成一行：40px 圆形头像 + 昵称 + 右侧 `+加关注`。
 
-- 中文字体族名（Sarasa Mono SC / Noto Sans Mono CJK SC / Source Han Mono SC）是否在目标机器安装；即使全缺也有 `monospace` 兜底，无回归风险。
-- 各平台对 SVG `og:image` 与 SVG favicon 的接受度（尤其 Safari/macOS），可能需 `rel="mask-icon"` 或一次性 PNG 兜底，本轮未实测。
-- 归档/标签/分类页真实 DOM 细节沿用历史 CDP 结论，本轮未重新核实；§5.3 的 `left` 偏移由实现方按实际 DOM 定夺。
-- `#blogLogo` 用户自定义挂载点完全不触碰。
+### 6.3 代码块
+
+- 固定深色，**浅色模式下也不反转**（`--xm-code-block-bg #0b0c0d`，前景 15.52:1）。
+- mac 三点保留结构、换成三档中性灰（`--xm-code-dot-1/2/3`），通过覆写平台变量
+  `--mac-style-color-red/orange/green` 实现，**不用红黄绿**。
+- 平台把三点位置让给 `code` 的 `padding-top`，而本主题的 `pre code { padding: 0 }` 优先级更高，
+  必须显式补 `padding-top: 34px`，否则三点压在第 1 行行号上。
+- 行号槽 `.xm-code-ln` 与原生 `table.hljs-ln` 互斥，`aria-hidden` + `user-select: none`，不进复制文本。
+- 复制按钮是描边小按钮（`<button type=button>`），成功态文字变绿 `#7ee0a6`，**不做**缩放动画、不做发光。
+
+### 6.4 侧栏
+
+- 结构语言：`#sideBarMain { gap: 0 }`，每个模块 `border-top: 1px`，首块去顶线。
+  **模块没有卡片框、没有背景、没有圆角。**
+- 模块标题 `.catListTitle`：等宽 11px / 500 / `0.08em` / `uppercase` / muted，无左轨、无缩进。
+- 日历：重排为紧凑格，今日用 `--xm-accent-deep` 的实心 pill（类名是 `CalTodayDay`，不是 `CalToday`；
+  底色不能用 `--xm-accent`，白字只有 1.73:1）。
+- 搜索：`.div_my_zzk` 一行 flex，`#btnZzk` 与输入框同款 6px 圆角控件，placeholder 由 JS 补「搜索文章…」。
+- 空模块（无内容的 widget）由 JS 加 `.xm-empty` → `display: none`，不留空框。
+
+### 6.5 导航与页头
+
+- 单行 56px 吸顶工具条：brand（32px 圆头像 + 12px 靛蓝四分之一弧线 + 标题）+ 导航 + 右侧动作。
+- 背景 `color-mix(in srgb, var(--xm-bg) 82%, transparent)` + `backdrop-filter: blur(18px) saturate(140%)`；
+  滚动后 `.is-stuck` 提到 72% 不透明度，保证发丝线在内容上仍可辨。
+- 导航项 `padding 6/10`，当前项用 8% 文字色底 + 6px 圆角，**无下划线、无 2px 轨道段**。
+- 平台自带的 1×1 透明 `logo.gif` 占位要隐藏，否则 32px 圆形框里是空的。
+
+### 6.6 归档 / 标签 / 分类
+
+- `.entrylistTitle`（年月）：等宽小标签，`--xm-border` 顶部发丝线，无装饰节点。
+- `.entrylistItem`：无左内边距、无序号点、无缩进，条目之间发丝线分隔。
+- `.entrylistItemPostDesc` 与首页 `.postDesc` 同一字阶与同一套 ` · ` 分隔规则，跨页不跳字号。
+- 标签云：等权 chip，**不做权重分级、不用 `:nth-child` 伪造热门**。
+
+### 6.7 悬浮层
+
+- 进度条 `.xm-progress`：1px 纯色 `--xm-accent`，无渐变、无发光。
+- FAB `.xm-fab__btn`：描边按钮（`--xm-border-strong`），hover 只改描边色，无投影。
+- 灯箱 `.xm-lightbox`：原生 `<dialog>.showModal()`，遮罩 `rgba(5,6,7,.9)`。
+- 隐藏态一律用 `hidden` 属性 + `[hidden]{display:none}`，**禁止 `opacity: 0` 假隐藏**。
+
+## 7. 浅色套的独立推导
+
+浅色不是深色取反，有三条必须重算：
+
+- **强调色压深**：`#8b93ff` 在白底仅 1.9:1，不能作文字。浅色 `--xm-accent: #5e6ad2`，
+  作为文字时进一步压到 `--xm-accent-text: #4b55b8`（最低 5.75:1）。
+- **四级背景不塌陷**：`#fbfbfc / #ffffff / #ffffff / #f2f3f5`，靠 `surface-hover` 下沉而不是「越浮起越亮」。
+  注意 `bg-elevated` 与 `surface` 同值 `#ffffff` 是有意的——在浅色里卡片与画布靠 1px 描边区分，不靠色差。
+- **发丝线换向**：深色线是「比底亮」，浅色线是「比底暗」；`--xm-border` 从 `#1c1e21` 换到 `#e6e8eb`，
+  两者都是 ~1.2:1 的装饰级，不需要额外的边缘处理。
+
+代码块常量、mac 三点、灯箱遮罩**不在浅色块覆写**：它们是跨模式常量，覆写会让代码区刷白。
+
+## 8. 动效
+
+| 项 | 值 |
+|---|---|
+| 时长 | `--xm-dur-fast 140ms` / `--xm-dur 180ms` / `--xm-dur-slow 260ms` |
+| 曲线 | `--xm-ease: cubic-bezier(.2,.7,.3,1)`，只有这一条 |
+| hover 允许 | `border-color` / `color` / `background-color` / `opacity`；实心主按钮额外允许 `filter: brightness(.94)` |
+| `:active` 允许 | `transform: translateY(1px)`（按压反馈，**不进 transition**，即时生效） |
+| 禁止 | hover/idle 的 `transform`（位移、缩放、旋转）、`box-shadow`、`letter-spacing`、`clip-path` |
+
+- hover **只表达「亮一档」**：换色或压暗，不位移、不放大、不发光。
+- `.xm-btn:active` 的 1px 下压是唯一的位移，且必须即时（不加过渡），否则按压会拖尾。
+- 唯一「入场」是内容淡入，且必须在 `prefers-reduced-motion: reduce` 时直接落到终态而不是隐藏。
+- 平滑滚动包在 `@media (prefers-reduced-motion: no-preference)` 内。
+- 局部 reduced-motion 兜底写在 `components.css` §16，**不改**全局规则。
+
+## 9. 这一版明确删掉的东西
+
+记录在此，避免下一个人「觉得空」又加回来：
+
+| 删除项 | 原因 |
+|---|---|
+| 冷蓝 + 暖金双色分工 | 双色强调让系统变成「两套语义」，与单点强调直接冲突 |
+| 星轨节点图形 / 品牌四角星 / 8px 节点 | 页头已有弧线 + 圆点，再加节点是冗余第三焦点 |
+| 网点纹理 `body::after` / 双色星云 | 纹理在近黑底上只会显脏，Linear 式画布要干净 |
+| 卡片 hover 位移 + 扫光 + 投影 | 位移与投影都是「界面在动」，抢内容注意力 |
+| 标题渐变文字 | 渐变在 21px 以下会糊，且引入第二个色相 |
+| 导航 2px 底部轨道段 | 与「当前项用底色」重复表达同一状态 |
+| 侧栏卡片框 + 模块间 gap | 改为发丝线分区后，卡片框变成多余的第三个层级 |
+| 代码块红黄绿三点 | 三原色破坏单色体系，改三档中性灰 |
+| 摘要 3 行截断 | 3 行会让「阅读全文」被裁掉，改 2 行 + 独立成行 |
+| 计数括号 `阅读(30)` | 括号是平台默认排版噪音，改 `30 · 阅读` 式表达 |
+
+## 10. 验收清单
+
+改完样式后逐条过，任一条不过就是回归：
+
+- [ ] 深/浅两态、1440 / 1024 / 390 三宽度，首页 + 文章页 + 归档页目视无异常
+- [ ] 语义层零色值字面量：`grep -cnE '#[0-9a-fA-F]{3,8}|rgba?\(' src/{base,layout,components}.css` 全为 0
+- [ ] 无空挂令牌：见 `docs/tokens.md` §9，期望只输出 4 个断点令牌
+- [ ] 文章页无双层卡片；侧栏模块无卡片框；全局 `box-shadow` 只剩 `--xm-shadow-popover` 与 `--xm-glow-accent(none)`
+- [ ] 代码块三点不压第 1 行行号；浅色模式下代码块仍是深色
+- [ ] hover 无位移、无投影、无发光，只变描边/文字色
+- [ ] `≤640px` 无横向溢出（表格走 `.xm-table-wrap` 内部滚动）
+- [ ] `prefers-reduced-motion: reduce` 下所有装饰处于终态且可见
+- [ ] 对比度未退化：正文 ≥16:1、弱文字 ≥4.4:1、UI 边界 ≥3:1
+- [ ] `keep.css` 的光标与 `#loading` 未被影响
+
+## 11. 未核实 / 已知取舍
+
+- `--xm-text-muted` 在浅色 `surface-hover` 上 4.48:1，比 4.5 低 0.02。之所以不调，是因为往任一方向动
+  都会让另一模式破线；它只用于时间戳等非关键小字，且该底色只在 hover 瞬间出现。
+- Inter 是否安装取决于用户机器；缺失时字距观感会有细微差异，不引 webfont 是有意取舍。
+- 归档 / 标签 / 分类页的真实 DOM 沿用历史 CDP 结论，平台改版后需重新核对选择器注册表（见 `docs/adapter.md`）。
+- `#blogLogo` 是用户自定义挂载点，除圆形框外不做任何假设。
