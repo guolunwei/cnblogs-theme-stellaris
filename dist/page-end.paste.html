@@ -1301,6 +1301,23 @@ var t = (li.textContent || "").replace(/\s+/g, " ").replace(/\s*-\s*/g, " ").tri
 if (t && t !== li.textContent) li.textContent = t;
 });
 
+/* 侧栏列表的计数沿用平台半角括号（"标题(56)"、"2026年11月(2)"），
+与首页 postDesc 的中点分隔不一致。只在这几个列表容器内改，避免碰正文。 */
+Array.prototype.forEach.call(
+document.querySelectorAll(
+"#TopViewPostsBlock, #sidebar_postarchive, #sidebar_recentposts, #sidebar_newposts"
+),
+function (box) {
+var walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT, null, false);
+var node;
+while ((node = walker.nextNode())) {
+var t = node.nodeValue;
+if (!t || !/\(\s*\d+\s*\)/.test(t)) continue;
+node.nodeValue = t.replace(/\s*\(\s*(\d+)\s*\)/g, " · $1");
+}
+}
+);
+
 function mark(block) {
 var hasText = (block.textContent || "").replace(/\s+/g, "") !== "";
 var hasMedia = !!block.querySelector("input, img, canvas, iframe, svg");

@@ -403,6 +403,9 @@ gap: var(--xm-s10);
 align-items: start;
 margin-top: var(--xm-s8);
 }
+#main > .clear {
+display: none;
+}
 #mainContent {
 min-width: 0;
 }

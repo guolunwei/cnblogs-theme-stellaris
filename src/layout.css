@@ -192,6 +192,13 @@
   margin-top: var(--xm-s8);
 }
 
+/* 平台在 #main 末尾有一个 <div class="clear">。它作为 grid 的第三项会落到
+   第二行，即使高度为 0 也会多吃一个 gap（实测 40px 的底部空白）。
+   grid 布局不需要清浮动，直接移出布局。 */
+#main > .clear {
+  display: none;
+}
+
 #mainContent {
   min-width: 0;
 }
