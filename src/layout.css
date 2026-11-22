@@ -55,9 +55,9 @@
   display: none;
 }
 
-/* Brand block: a quarter-orbit arc + endpoint dot on the left, h1 and an
-   optional tagline sharing one flex row. Both pseudo elements are absolute, so
-   the 12x12 decoration cannot grow the 56px toolbar; padding-left reserves room. */
+/* Brand block: a solid accent rounded-square mark on the left, h1 and an
+   optional tagline sharing one flex row. The pseudo element is absolute, so
+   the decoration cannot grow the 56px toolbar; padding-left reserves room. */
 #blogTitle {
   position: relative;
   flex: 0 0 auto;
@@ -65,34 +65,22 @@
   display: flex;
   align-items: center;
   gap: var(--xm-s2);
-  padding-left: 22px;
+  padding-left: 20px;
 }
-#blogTitle::before,
-#blogTitle::after {
+#blogTitle::before {
   content: "";
   position: absolute;
   pointer-events: none;
-}
-/* 12x12 quarter circle (top-right corner) in indigo, no image/gradient. */
-#blogTitle::before {
   left: 0;
   top: 50%;
-  width: 12px;
-  height: 12px;
-  border-top: 1.5px solid var(--xm-accent);
-  border-right: 1.5px solid var(--xm-accent);
-  border-top-right-radius: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--xm-accent);
   transform: translateY(-50%);
 }
-/* Small dot sitting on the arc's lower-right endpoint. */
 #blogTitle::after {
-  left: 10px;
-  top: 50%;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--xm-accent);
-  transform: translateY(3px);
+  content: none;
 }
 
 #blogTitle h1 {

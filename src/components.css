@@ -968,6 +968,108 @@ input[type="submit"]:active {
   border: var(--xm-bw) solid var(--xm-border);
   border-radius: var(--xm-r-card);
   box-shadow: var(--xm-shadow-card);
+  /* 「[Ctrl+Enter快捷键提交]」是服务端渲染的裸文本节点，CSS 无法直接命中，
+     只能靠容器继承把它的字体收敛到主题语言。 */
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  color: var(--xm-text-muted);
+}
+
+/* ---------- 提交评论 / 退出 操作行 ----------
+   平台 #commentbox_opt a 默认带 padding-left:10px 的蓝色裸链，
+   拍平成主按钮旁的等宽灰字链接。 */
+#commentbox_opt {
+  display: flex;
+  align-items: center;
+  gap: var(--xm-s4);
+  margin-top: var(--xm-s4);
+}
+#commentbox_opt a {
+  padding-left: 0 !important;
+  color: var(--xm-text-muted) !important;
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  text-decoration: none !important;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
+}
+#commentbox_opt a:hover {
+  color: var(--xm-accent-text) !important;
+}
+/* 平台 .comment_btn 固定 68x26，重置后让 inline-flex 按内容自适应。 */
+.comment_btn {
+  width: auto !important;
+  height: auto !important;
+  margin: 0;
+  line-height: var(--xm-lh-small);
+}
+
+/* ---------- 编辑推荐 ----------
+   headlines 字段注入 #under_post_card1（header + ul/li）；#opt_under_post
+   与 #under_post_card2（aggTopPosts/historyToday）无数据时是空 div。
+   注意不能用 display:none 折叠空容器——平台 showHeadlines 等注入前会
+   is(":visible") 探测，display:none 会导致内容永远不注入；
+   只能用中性化样式把空容器的边框/内边距抹掉。 */
+#opt_under_post:empty,
+#under_post_card1:empty,
+#under_post_card2:empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#opt_under_post:not(:empty),
+#under_post_card1:not(:empty),
+#under_post_card2:not(:empty) {
+  margin: var(--xm-s4) 0;
+  padding: var(--xm-s4) var(--xm-s5);
+  background: var(--xm-surface);
+  border: var(--xm-bw) solid var(--xm-border);
+  border-radius: var(--xm-r-card);
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  line-height: var(--xm-lh-small);
+  color: var(--xm-text-muted);
+}
+#opt_under_post b,
+#under_post_card1 header,
+#under_post_card2 b {
+  display: block;
+  margin-bottom: var(--xm-s2);
+  font-weight: 600;
+  font-size: var(--xm-fs-caption);
+  letter-spacing: 0.06em;
+  color: var(--xm-text-secondary);
+}
+#under_post_card1 ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#under_post_card1 li {
+  margin: 0;
+  padding: var(--xm-s2) 0;
+}
+#under_post_card1 li + li {
+  border-top: var(--xm-bw) solid var(--xm-border);
+}
+#opt_under_post a,
+#under_post_card1 a,
+#under_post_card2 a {
+  color: var(--xm-accent-text);
+  text-decoration: none;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
+}
+#opt_under_post a:hover,
+#under_post_card1 a:hover,
+#under_post_card2 a:hover {
+  color: var(--xm-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#opt_under_post .c_ad_block,
+#under_post_card1 .c_ad_block,
+#under_post_card2 .c_ad_block {
+  display: none;
 }
 
 /* ---------- 评论导航（刷新评论 / 刷新页面 / 返回顶部）----------
