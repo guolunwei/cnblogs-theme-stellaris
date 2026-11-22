@@ -2018,6 +2018,26 @@ select:focus {
   border: 0;
 }
 
+/* 键盘跳转链接：默认移出画面，聚焦时贴顶浮现（不遮挡工具条） */
+.xm-skip {
+  position: fixed;
+  top: -48px;
+  left: 16px;
+  z-index: var(--xm-z-fab);
+  padding: var(--xm-s2) var(--xm-s4);
+  border-radius: var(--xm-r-button);
+  background: var(--xm-bg-elevated);
+  border: var(--xm-bw) solid var(--xm-border-strong);
+  color: var(--xm-text);
+  font-size: var(--xm-fs-small);
+  line-height: var(--xm-lh-small);
+  text-decoration: none;
+  transition: top var(--xm-dur-fast) var(--xm-ease);
+}
+.xm-skip:focus {
+  top: 12px;
+}
+
 /* ==========================================================================
    15. Phase 3 · 响应式（断点硬编码，媒体查询条件不能用 var()）
    ========================================================================== */

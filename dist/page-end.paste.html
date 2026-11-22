@@ -1289,12 +1289,15 @@ wrap.appendChild(table);
 }
 
 /* --- 侧栏结构整理：平台会渲染出没有内容的模块，留着就是一整段空白 ---
-只加 class 隐藏，不删节点；若平台稍后再填充内容，1.8s 后自动放行。 */
+只加 class 隐藏，不删节点；若平台稍后再填充内容，1.8s 后自动放行。
+积分/排名与各列表计数由平台 AJAX 注入，晚于本脚本运行，
+所以清理逻辑必须可重入（全部幂等），并在侧栏 DOM 变化时补跑。 */
 function initSidebarClean() {
 var blocks = pickAll("sidebarBlocks");
 var q = document.getElementById("q");
 if (q && !q.getAttribute("placeholder")) q.setAttribute("placeholder", "搜索文章…");
 
+function tidy() {
 /* "积分 -  5233" 这种平台文案收成 "积分 5233" */
 Array.prototype.forEach.call(document.querySelectorAll(".liScore, .liRank"), function (li) {
 var t = (li.textContent || "").replace(/\s+/g, " ").replace(/\s*-\s*/g, " ").trim();
@@ -1325,10 +1328,26 @@ if (!hasText && !hasMedia) block.classList.add("xm-empty");
 else block.classList.remove("xm-empty");
 }
 Array.prototype.forEach.call(blocks, mark);
+}
+
+tidy();
 if (blocks.length) {
-setTimeout(function () {
-Array.prototype.forEach.call(blocks, mark);
-}, 1800);
+setTimeout(tidy, 1800);
+}
+
+/* 平台 AJAX 注入（积分、排行、档案计数）晚于初始化；观察侧栏，变化后补跑。
+做了防抖，且补跑也是幂等的，重复触发无副作用。 */
+var sidebar = document.getElementById("sideBarMain") || document.getElementById("sideBar");
+if (sidebar && "MutationObserver" in window) {
+var pending = null;
+var mo = new MutationObserver(function () {
+if (pending) return;
+pending = setTimeout(function () {
+pending = null;
+tidy();
+}, 200);
+});
+mo.observe(sidebar, { childList: true, subtree: true, characterData: true });
 }
 }
 
