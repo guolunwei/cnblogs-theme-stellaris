@@ -55,9 +55,11 @@
   display: none;
 }
 
-/* Brand block: a solid accent rounded-square mark on the left, h1 and an
-   optional tagline sharing one flex row. The pseudo element is absolute, so
-   the decoration cannot grow the 56px toolbar; padding-left reserves room. */
+/* Brand block: a tiny planet on an elliptical orbit — echoes the
+   「星轨 Stellaris」 name. ::before is the outlined orbit ring (a thin
+   ellipse tilted -24°), ::after is the planet: a lit gradient sphere
+   with a faint glow. Pure CSS, no images; both pseudo elements are
+   absolute so the decoration cannot grow the 56px toolbar. */
 #blogTitle {
   position: relative;
   flex: 0 0 auto;
@@ -65,22 +67,39 @@
   display: flex;
   align-items: center;
   gap: var(--xm-s2);
-  padding-left: 20px;
+  padding-left: 28px;
 }
 #blogTitle::before {
   content: "";
   position: absolute;
   pointer-events: none;
-  left: 0;
+  left: 2px;
   top: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--xm-accent);
-  transform: translateY(-50%);
+  width: 20px;
+  height: 12px;
+  border: 1.5px solid var(--xm-accent);
+  border-radius: 50%;
+  transform: translateY(-50%) rotate(-20deg);
 }
 #blogTitle::after {
-  content: none;
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  left: 9.5px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  /* 受光球面：左上高光 → accent 主体 → accent-deep 暗缘 */
+  background: radial-gradient(
+    circle at 32% 28%,
+    var(--xm-accent-text),
+    var(--xm-accent) 55%,
+    var(--xm-accent-deep)
+  );
+  transform: translateY(-50%);
+  /* 极淡星芒，亮度压到 40% 以下避免喧宾夺主 */
+  box-shadow: 0 0 5px 0 color-mix(in srgb, var(--xm-accent) 40%, transparent);
 }
 
 #blogTitle h1 {
