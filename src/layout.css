@@ -55,11 +55,11 @@
   display: none;
 }
 
-/* Brand block: a tiny planet on an elliptical orbit — echoes the
-   「星轨 Stellaris」 name. ::before is the outlined orbit ring (a thin
-   ellipse tilted -24°), ::after is the planet: a lit gradient sphere
-   with a faint glow. Pure CSS, no images; both pseudo elements are
-   absolute so the decoration cannot grow the 56px toolbar. */
+/* Brand block: a double-sparkle mark — echoes 「星月梦微」. ::before is the
+   main 4-point star (clip-path polygon, gradient fill), ::after is the
+   smaller companion star at its upper right. Pure CSS, no images; both
+   pseudo elements are absolute so the decoration cannot grow the 56px
+   toolbar; padding-left reserves room. */
 #blogTitle {
   position: relative;
   flex: 0 0 auto;
@@ -67,39 +67,54 @@
   display: flex;
   align-items: center;
   gap: var(--xm-s2);
-  padding-left: 28px;
+  padding-left: 24px;
 }
 #blogTitle::before {
   content: "";
   position: absolute;
   pointer-events: none;
-  left: 2px;
+  left: 0;
   top: 50%;
-  width: 20px;
-  height: 12px;
-  border: 1.5px solid var(--xm-accent);
-  border-radius: 50%;
-  transform: translateY(-50%) rotate(-20deg);
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(
+    135deg,
+    var(--xm-accent-text),
+    var(--xm-accent) 55%,
+    var(--xm-accent-deep)
+  );
+  clip-path: polygon(
+    50% 0%,
+    61% 39%,
+    100% 50%,
+    61% 61%,
+    50% 100%,
+    39% 61%,
+    0% 50%,
+    39% 39%
+  );
+  transform: translateY(-50%);
 }
 #blogTitle::after {
   content: "";
   position: absolute;
   pointer-events: none;
-  left: 9.5px;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  /* 受光球面：左上高光 → accent 主体 → accent-deep 暗缘 */
-  background: radial-gradient(
-    circle at 32% 28%,
-    var(--xm-accent-text),
-    var(--xm-accent) 55%,
-    var(--xm-accent-deep)
+  left: 11px;
+  top: calc(50% - 10px);
+  width: 8px;
+  height: 8px;
+  background: var(--xm-accent);
+  opacity: 0.75;
+  clip-path: polygon(
+    50% 0%,
+    61% 39%,
+    100% 50%,
+    61% 61%,
+    50% 100%,
+    39% 61%,
+    0% 50%,
+    39% 39%
   );
-  transform: translateY(-50%);
-  /* 极淡星芒，亮度压到 40% 以下避免喧宾夺主 */
-  box-shadow: 0 0 5px 0 color-mix(in srgb, var(--xm-accent) 40%, transparent);
 }
 
 #blogTitle h1 {
