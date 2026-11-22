@@ -471,6 +471,119 @@
   border-color: var(--xm-accent) !important;
 }
 
+/* ---------- 推荐 / 反对（#div_digg）----------
+   平台原始样式是一块雪碧图按钮：黄色大数字 + 下沉文字，与整页风格完全脱节。
+   拍平成两枚 ghost 胶囊，与 green_channel 按钮同一视觉语言。
+   平台 blog-common.css 对 .diggit/.buryit 用的是 class 选择器 + 背景图，
+   这里的 ID 后代选择器 ([1,1,0]) 稳赢，背景仍加 !important 兜底雪碧图。 */
+#div_digg {
+  /* 平台对 #div_digg 用 float:right + 固定宽度：float 容器收缩到 min-content，
+     会把按钮压成一个字宽导致文字竖排。改为普通 flex 容器并右对齐。 */
+  float: none !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--xm-s3);
+}
+#div_digg .diggit,
+#div_digg .buryit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xm-s2);
+  margin: 0;
+  padding: var(--xm-s2) var(--xm-s4);
+  /* 平台给 .diggit/.buryit 设了固定 width/height 并用雪碧图画「推荐/反对」文字，
+     背景拍平后必须连宽高一起重置，再由 ::after 补回文字。 */
+  flex: none;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0;
+  min-height: 0;
+  white-space: nowrap;
+  background: transparent !important;
+  background-image: none !important;
+  border: var(--xm-bw) solid var(--xm-border-strong) !important;
+  border-radius: var(--xm-r-button) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition:
+    color var(--xm-dur-fast) var(--xm-ease),
+    border-color var(--xm-dur-fast) var(--xm-ease),
+    box-shadow var(--xm-dur-fast) var(--xm-ease);
+}
+/* 平台 DOM 里没有「推荐/反对」文字节点（那是雪碧图的一部分），这里补回 */
+#div_digg .diggit::after,
+#div_digg .buryit::after {
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  line-height: 1;
+}
+#div_digg .diggit::after {
+  content: "推荐";
+}
+#div_digg .buryit::after {
+  content: "反对";
+}
+#div_digg .diggit:hover,
+#div_digg .buryit:hover {
+  color: var(--xm-accent-text);
+  border-color: var(--xm-accent) !important;
+  box-shadow: var(--xm-glow-accent);
+}
+#div_digg .diggit.diggit_on {
+  background: var(--xm-accent-soft) !important;
+  border-color: var(--xm-accent) !important;
+}
+/* 数字：平台给 .diggnum/.burynum 配了黄/灰底色块和绝对定位，全部拍平 */
+#div_digg .diggnum,
+#div_digg .burynum {
+  position: static !important;
+  display: inline;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-small);
+  font-weight: 600;
+  line-height: inherit;
+}
+/* 「推荐」「反对」文字：等宽小字，跟 chip 语言一致 */
+#div_digg .diggword,
+#div_digg .buryword {
+  display: inline;
+  width: auto !important;
+  padding: 0 !important;
+  background: none !important;
+  color: inherit !important;
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  line-height: inherit;
+  text-indent: 0 !important;
+}
+#div_digg .diggit {
+  color: var(--xm-text-secondary);
+}
+#div_digg .buryit {
+  color: var(--xm-text-muted);
+}
+#div_digg .diggit_on,
+#div_digg .diggit_on .diggnum,
+#div_digg .diggit_on .diggword {
+  color: var(--xm-accent-text) !important;
+}
+#div_digg .clear {
+  display: none;
+}
+
 /* ==========================================================================
    4. 侧栏模块
    侧栏不做卡片：一条 1px 发丝线切一节，等宽小标签管标题。
@@ -669,7 +782,8 @@
   border-color: var(--xm-accent);
 }
 .div_my_zzk #btnZzk,
-.div_my_zzk .btn_my_zzk {
+.div_my_zzk .btn_my_zzk,
+.div_my_zzk input[type="button"] {
   flex: 0 0 auto;
   padding: 7px 12px;
   background: var(--xm-surface-hover);
@@ -681,7 +795,8 @@
   cursor: pointer;
   transition: color var(--xm-dur-fast) var(--xm-ease), border-color var(--xm-dur-fast) var(--xm-ease);
 }
-.div_my_zzk #btnZzk:hover {
+.div_my_zzk #btnZzk:hover,
+.div_my_zzk input[type="button"]:hover {
   color: var(--xm-text);
   border-color: var(--xm-border-strong);
 }
@@ -853,6 +968,85 @@ input[type="submit"]:active {
   border: var(--xm-bw) solid var(--xm-border);
   border-radius: var(--xm-r-card);
   box-shadow: var(--xm-shadow-card);
+}
+
+/* ---------- 评论导航（刷新评论 / 刷新页面 / 返回顶部）----------
+   平台原生是一行蓝色裸链接，拍平成右对齐的等宽小字链接组。 */
+#comment_nav {
+  margin: var(--xm-s4) 0;
+  text-align: right;
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+}
+#comment_nav a,
+#comment_nav a:link,
+#comment_nav a:visited {
+  margin-left: var(--xm-s3);
+  color: var(--xm-text-muted) !important;
+  text-decoration: none;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
+}
+#comment_nav a:hover {
+  color: var(--xm-accent-text) !important;
+}
+
+/* ---------- 评论编辑器工具栏 ----------
+   「编辑 / 预览」tab 与 B/链接/代码/引用/图片 图标按钮都是平台原生样式，
+   统一收进发丝线语言：tab 选中态用 accent 下划线，图标按钮用 ghost 小方钮。 */
+.commentbox_title {
+  display: flex;
+  align-items: center;
+  gap: var(--xm-s4);
+  padding: 0 0 var(--xm-s2);
+  border-bottom: var(--xm-bw) solid var(--xm-border);
+}
+.commentbox_tab {
+  padding: var(--xm-s2) 0;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--xm-text-muted);
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-small);
+  cursor: pointer;
+  transition:
+    color var(--xm-dur-fast) var(--xm-ease),
+    border-color var(--xm-dur-fast) var(--xm-ease);
+}
+.commentbox_tab:hover {
+  color: var(--xm-text);
+}
+.commentbox_tab.active,
+.commentbox_tab.active:hover {
+  color: var(--xm-accent-text);
+  border-bottom-color: var(--xm-accent);
+}
+/* 右侧图标动作区：整体推到右边，内部图标统一尺寸/颜色 */
+.commentbox_title .comment_actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--xm-s2);
+}
+.commentbox_title .comment_actions a,
+.commentbox_title .comment_actions img,
+.commentbox_title .comment_actions svg {
+  display: inline-block;
+  opacity: 0.75;
+  cursor: pointer;
+  transition: opacity var(--xm-dur-fast) var(--xm-ease);
+}
+.commentbox_title .comment_actions a:hover,
+.commentbox_title .comment_actions img:hover,
+.commentbox_title .comment_actions svg:hover {
+  opacity: 1;
+}
+/* 图标若是 <img>，用 filter 兜住彩色小图标发灰发光不协调的问题 */
+.commentbox_title .comment_actions img {
+  filter: grayscale(1) brightness(1.6);
+}
+.commentbox_title .comment_actions img:hover {
+  filter: grayscale(0) brightness(1);
 }
 
 /* ==========================================================================
