@@ -685,7 +685,18 @@
   border: 0;
 }
 
-/* 空模块：平台会渲染出没有内容的区块，删掉以免出现整段空白 */
+/* 空模块：平台异步渲染（sidebar-lists）会吐出只有空白的分节
+   （#sidebar_toptags / #sidebar_topcommentedposts / #sidebar_topdiggedposts /
+   #sidebar_recentcomments）。每条分节带 border-top，空的时候就是一条孤立的分隔线。
+   用 :has() 判断「有没有实际子节点」，内容异步填进来后会自动恢复显示，
+   不写死 id，避免以后真有了标签/评论反而被永久隐藏。
+   注意：:has() 不能嵌套 :has()（CSS 规范禁止），一旦嵌套整条规则会被丢弃，
+   所以这里只能写单层，不要为了「标题在但列表空」再套一层。 */
+#sideBarMain .sidebar-block:not(:has(*)) {
+  display: none !important;
+}
+
+/* 兜底：给脚本 / 手工挂 .xm-empty 用 */
 .xm-empty {
   display: none !important;
 }

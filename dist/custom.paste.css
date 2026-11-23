@@ -1163,6 +1163,11 @@ border: 0;
 }
 
 
+#sideBarMain .sidebar-block:not(:has(*)) {
+display: none !important;
+}
+
+
 .xm-empty {
 display: none !important;
 }
