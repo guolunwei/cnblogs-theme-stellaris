@@ -1483,44 +1483,118 @@ img {
   border-color: var(--xm-border-strong);
 }
 
-/* ---------- 作者卡：头像 + 昵称 + 关注，一行读完 ---------- */
+/* ---------- 互动条 + 作者卡 ----------
+   平台原始布局：#author_profile { float:left; width:280px } 与
+   #div_digg { float:right; width:125px }。两个 float 并排的结果是
+   作者卡自带一条只有 280px 长的上边线（看起来像半截断裂的分隔线），
+   推荐/反对被甩到右侧半空，中间留下大片空白。
+   这里把 #blog_post_info 变成 flex 容器：
+     第一行 = 按钮组 + 右对齐的推荐/反对
+     第二行 = 整宽作者卡（上边线贯穿整栏） */
+#blog_post_info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+#blog_post_info > .clear {
+  display: none;
+}
+/* 免责声明等平台未知注入块独占一行，不参与按钮行的排布 */
+#blog_post_info
+  > *:not(#green_channel):not(#author_profile):not(#div_digg):not(.clear) {
+  flex: 1 0 100%;
+}
+#blog_post_info #green_channel {
+  order: 1;
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--xm-s2);
+}
+#blog_post_info #green_channel a {
+  margin: 0;
+}
+#blog_post_info #div_digg {
+  order: 2;
+  margin-left: auto !important;
+}
+
+/* ---------- 作者卡：头像 + 昵称 + 数据，一行读完 ---------- */
 #author_profile {
+  order: 3;
+  flex: 1 0 100%;
+  /* 平台是 float:left + width:280px，必须连宽高一起重置 */
+  float: none !important;
+  width: auto !important;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--xm-s3);
-  margin-top: var(--xm-s5);
+  gap: var(--xm-s3) var(--xm-s5);
+  margin: var(--xm-s5) 0 0 !important;
   padding-top: var(--xm-s4);
   border-top: var(--xm-bw) solid var(--xm-border);
+  color: var(--xm-text-secondary);
+  font-size: var(--xm-fs-small);
 }
 #author_profile_info {
   display: flex;
   align-items: center;
   gap: var(--xm-s3);
+  min-width: 0;
 }
+/* 平台 .author_avatar 带 float:left 和 padding-top:5px/padding-left:2px，
+   40×40 的盒子被撑成 42×45 的非正方形，border-radius:999px 于是画成胶囊
+   而不是圆。清掉 padding/float 并锁死正方形才是正圆。 */
 #author_profile .author_avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--xm-r-chip);
+  float: none !important;
+  display: block;
+  box-sizing: border-box;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 !important;
+  margin: 0 !important;
+  aspect-ratio: 1 / 1;
   border: var(--xm-bw) solid var(--xm-border);
+  border-radius: 50% !important;
   object-fit: cover;
+  vertical-align: middle;
 }
 #author_profile_detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1px var(--xm-s3);
+  min-width: 0;
   font-size: var(--xm-fs-caption);
-  line-height: 1.7;
+  line-height: var(--xm-lh-caption);
   color: var(--xm-text-muted);
 }
+/* 平台在昵称后插了一个 <br />，flex 下改用断行控制，避免多出一条空行 */
+#author_profile_detail > br {
+  display: none;
+}
 #author_profile_detail a {
-  color: var(--xm-text-secondary);
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  color: var(--xm-text-muted);
 }
 #author_profile_detail a:first-child {
+  flex: 1 0 100%;
+  font-family: inherit;
   font-size: var(--xm-fs-small);
   font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--xm-text);
 }
 #author_profile_detail a:hover,
 #author_profile_detail a:first-child:hover {
   color: var(--xm-accent-text);
+}
+#author_profile_honor:empty {
+  display: none;
 }
 #author_profile_follow {
   margin-left: auto;
@@ -1538,6 +1612,26 @@ img {
 #author_profile_follow a:hover {
   color: var(--xm-text);
   border-color: var(--xm-border-strong);
+}
+
+/* ---------- 下一篇 / 上一篇 ---------- */
+#post_next_prev {
+  flex: 1 0 100%;
+  margin: var(--xm-s4) 0 0;
+  padding-top: var(--xm-s4);
+  border-top: var(--xm-bw) solid var(--xm-border);
+  font-family: var(--xm-font-mono);
+  font-size: var(--xm-fs-caption);
+  line-height: var(--xm-lh-caption);
+  color: var(--xm-text-muted);
+}
+#post_next_prev a {
+  color: var(--xm-text-secondary);
+  text-decoration: none;
+  transition: color var(--xm-dur-fast) var(--xm-ease);
+}
+#post_next_prev a:hover {
+  color: var(--xm-accent-text);
 }
 
 /* ==========================================================================

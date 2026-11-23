@@ -9,6 +9,8 @@ tests/*-result.json
 
 # Local scratch, editor backups and dry-run output.
 dist/.preview/
+# preview/ holds local-only layout harnesses (copies of platform CSS, throwaway HTML).
+preview/
 *.tmp
 *~
 .vscode/
