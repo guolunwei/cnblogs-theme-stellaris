@@ -1459,7 +1459,13 @@ img {
 .div_my_zzk input[type="text"] {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 7px 10px;
+  /* 输入框和按钮锁同一个高度：平台原始是 content-box + height:24px，
+     我们加 7px 纵向 padding 后实际 40px，按钮那边却是另一套盒模型，
+     两者高度对不上、文字还会压到底边。统一 border-box + 固定高度最稳。 */
+  box-sizing: border-box;
+  height: 40px;
+  line-height: 1.4;
+  padding: 0 10px;
   background: var(--xm-bg);
   border: var(--xm-bw) solid var(--xm-border);
   border-radius: var(--xm-r-input);
@@ -1478,7 +1484,13 @@ img {
 .div_my_zzk .btn_my_zzk,
 .div_my_zzk input[type="button"] {
   flex: 0 0 auto;
-  padding: 7px 12px;
+  /* 平台给的是 height:26px + 左右 padding:5px，堆上我们的 7px 纵向 padding 后
+     内容盒比行盒还矮，input 的文字于是贴到底边。统一成和输入框一样的盒模型，
+     文字由浏览器在内容盒里居中，不再靠 padding 撑。 */
+  box-sizing: border-box;
+  height: 40px;
+  line-height: 1;
+  padding: 0 14px;
   background: var(--xm-surface-hover);
   border: var(--xm-bw) solid var(--xm-border);
   border-radius: var(--xm-r-input);

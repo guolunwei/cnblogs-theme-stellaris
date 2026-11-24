@@ -1248,7 +1248,11 @@ gap: var(--xm-s2);
 .div_my_zzk input[type="text"] {
 flex: 1 1 auto;
 min-width: 0;
-padding: 7px 10px;
+
+box-sizing: border-box;
+height: 40px;
+line-height: 1.4;
+padding: 0 10px;
 background: var(--xm-bg);
 border: var(--xm-bw) solid var(--xm-border);
 border-radius: var(--xm-r-input);
@@ -1267,7 +1271,11 @@ border-color: var(--xm-accent);
 .div_my_zzk .btn_my_zzk,
 .div_my_zzk input[type="button"] {
 flex: 0 0 auto;
-padding: 7px 12px;
+
+box-sizing: border-box;
+height: 40px;
+line-height: 1;
+padding: 0 14px;
 background: var(--xm-surface-hover);
 border: var(--xm-bw) solid var(--xm-border);
 border-radius: var(--xm-r-input);
