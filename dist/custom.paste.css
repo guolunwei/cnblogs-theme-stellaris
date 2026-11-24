@@ -36,9 +36,9 @@ color-scheme: dark;
 --xm-code-copy-fg: #cdd9e8;
 --xm-code-copy-done: #7ee0a6;
 --xm-code-copy-done-border: rgba(126, 224, 166, 0.6);
---xm-code-dot-1: #3d434b;
---xm-code-dot-2: #4b525b;
---xm-code-dot-3: #5a626c;
+--xm-code-dot-1: #ff5f57;
+--xm-code-dot-2: #febc2e;
+--xm-code-dot-3: #28c840;
 --xm-lightbox-scrim: rgba(5, 6, 7, 0.9);
 --xm-font-sans: "Inter", "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
 "Noto Sans CJK SC", "Noto Sans SC", "Microsoft YaHei", -apple-system,

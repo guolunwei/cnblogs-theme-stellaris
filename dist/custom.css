@@ -72,10 +72,11 @@
   --xm-code-copy-fg:           #cdd9e8;
   --xm-code-copy-done:         #7ee0a6;
   --xm-code-copy-done-border:  rgba(126, 224, 166, 0.6);
-  /* macOS window dots on code blocks: three neutral steps, no traffic-light hues. */
-  --xm-code-dot-1: #3d434b;
-  --xm-code-dot-2: #4b525b;
-  --xm-code-dot-3: #5a626c;
+  /* macOS window dots on code blocks: the real traffic lights. The block is
+     always dark, so these read the same in both color modes. */
+  --xm-code-dot-1: #ff5f57;  /* close  · red   */
+  --xm-code-dot-2: #febc2e;  /* fold   · amber */
+  --xm-code-dot-3: #28c840;  /* zoom   · green */
   --xm-lightbox-scrim: rgba(5, 6, 7, 0.9);
 
   /* ---------- 字体 ---------- */
@@ -972,7 +973,7 @@ img {
 }
 
 /* mac 三点由平台用 box-shadow 画出，颜色走 CSS 变量：
-   保留三点结构，换成中性灰，避免红黄绿破坏单色体系。 */
+   直接给红黄绿三色（代码块恒为深色底，两种模式下都成立）。 */
 #cnblogs_post_body pre[data-mac-style],
 .postCon pre[data-mac-style] {
   --mac-style-color-red: var(--xm-code-dot-1);

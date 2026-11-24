@@ -290,7 +290,7 @@
 }
 
 /* mac 三点由平台用 box-shadow 画出，颜色走 CSS 变量：
-   保留三点结构，换成中性灰，避免红黄绿破坏单色体系。 */
+   直接给红黄绿三色（代码块恒为深色底，两种模式下都成立）。 */
 #cnblogs_post_body pre[data-mac-style],
 .postCon pre[data-mac-style] {
   --mac-style-color-red: var(--xm-code-dot-1);
