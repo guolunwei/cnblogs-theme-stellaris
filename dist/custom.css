@@ -1108,6 +1108,13 @@ img {
   background: none !important;
 }
 
+/* 免责声明（#EntryTag > .post-meta-disclaimer）与按钮行之间留出气口：
+   平台原本靠 #green_channel 的 margin-top:10px 撑着，上面那句 margin:0 抹掉后
+   文字和按钮就贴在一起了，这里把间距还给上方的声明行。 */
+#blog_post_info_block #EntryTag {
+  margin: 0 0 var(--xm-s4) !important;
+}
+
 #green_channel #green_channel_favorite,
 #green_channel #green_channel_digg,
 #green_channel #green_channel_follow,

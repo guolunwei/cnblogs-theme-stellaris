@@ -916,6 +916,11 @@ margin: 0 !important;
 background: none !important;
 }
 
+
+#blog_post_info_block #EntryTag {
+margin: 0 0 var(--xm-s4) !important;
+}
+
 #green_channel #green_channel_favorite,
 #green_channel #green_channel_digg,
 #green_channel #green_channel_follow,
